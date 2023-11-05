@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "pastiche"
+version = "0.1.0"
+description = "Package to create a game like \"Jumble Daily\""
+authors = ["Badr Ben m'barek <badr.benb@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+requests = "^2.31.0"
+scrapy = "^2.11.0"
+pandas = "^2.1.2"
+
+
+[tool.poetry.group.dev.dependencies]
+beautifulsoup4 = "^4.12.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
