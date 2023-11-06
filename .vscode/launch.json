@@ -14,7 +14,7 @@
                 "crawl",
                 "jumble_spider",
                 "-a",
-                "date_offset=365",
+                "date_offset=1095",
                 "-a",
                 "output_path=../../data/jumble_data.json",
                 "-a",
