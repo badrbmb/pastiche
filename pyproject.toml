@@ -10,6 +10,8 @@ python = ">=3.11,<3.13"
 requests = "^2.31.0"
 scrapy = "^2.11.0"
 pandas = "^2.1.2"
+openai-function-call = "^0.2.6"
+pydantic = "^2.4.2"
 
 
 [tool.poetry.group.dev.dependencies]

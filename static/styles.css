@@ -1,0 +1,68 @@
+body {
+    background-color: #f8f9fa;
+}
+.puzzle-container {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 20px;
+}
+.jumble-header h1 {
+    margin-bottom: 0;
+}
+.date {
+    font-size: 0.85rem;
+}
+.jumble-words > div {
+    padding: 10px;
+    font-weight: bold;
+}
+.jumble-group {
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    margin-bottom: 10px;
+}
+.text-right {
+    text-align: right;
+}
+.text-left {
+    text-align: left;
+}
+.input-letter {
+    margin: 0 0px;
+    width: 32px;
+    height: 30px;
+    border: none;
+    border-bottom: 2px solid #272a35;
+    text-align: center;
+    background-color: #e3f2fd;
+    color: #272a35;
+}
+.input-letter-cue {
+    margin: 0 0px;
+    width: 32px;
+    height: 30px;
+    border: 2px solid #272a35;
+    border-radius: 10px;
+    text-align: center;
+    background-color: #e3f2fd;
+    color: #272a35;
+}
+.cartoon-caption {
+    font-style: italic;
+}
+.answer-box {
+    display: inline-block;
+    border-bottom: 2px solid black;
+    width: 60px;
+    height: 34px;
+    margin: 5px;
+}
+.cartoon-placeholder {
+    height: 300px; /* Adjust the height as needed */
+    background-color: #e9ecef; 
+    text-align: center;
+    padding-top: 100px;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+}
