@@ -2,6 +2,7 @@ import re
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator, computed_field
 from datetime import datetime
+from tqdm import tqdm
 
 MAX_LENGHT_CLUE = 17
 
@@ -127,11 +128,12 @@ class JumbleGame(BaseModel):
         return substring
 
 
-class JumbleGameCollection(BaseModel):
-    games: list[JumbleGame]
+class JumbleGameCollection:
+    def __init__(self, games: list[JumbleGame]) -> None:
+        self.games = games
 
     @classmethod
-    def parse_historical_jumbles(path: str) -> "JumbleGameCollection":
+    def parse_historical_jumbles(cls, path: str) -> "JumbleGameCollection":
         """Function to parse dowloaded Jumble games into respective jumble objects with their computed properties"""
         df = pd.read_json(path_or_buf=path, lines=True)
         df.sort_values("value_date", inplace=True)
@@ -140,7 +142,7 @@ class JumbleGameCollection(BaseModel):
         df_jumbles = df[df["jumbled"].apply(lambda x: len(x) <= MAX_LENGHT_CLUE)].copy()
 
         all_games = []
-        for value_date, df_j in df_jumbles.groupby("value_date"):
+        for value_date, df_j in tqdm(df_jumbles.groupby("value_date")):
             df_ref_clues = df_clues.loc[df_clues["value_date"] == value_date].copy()
             for _, row in df_ref_clues.iterrows():
                 clue_sentence = row["jumbled"]
