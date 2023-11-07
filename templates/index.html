@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+    <title>Daily Jumble</title>
+</head>
+<script>
+    function handleInput(element, allowedChars) {
+      element.value = element.value.toUpperCase();
+      if (!allowedChars.includes(element.value)) {
+        alert('Sorry, `' + element.value + '` is not a valid option ¯\_(ツ)_/¯. \nPlease pick one letter from `' + allowedChars + '`');
+        element.value = '';
+      }
+      if (element.value != '') {
+        var inputs = document.getElementsByTagName("input");
+        var currentIndex = Array.from(inputs).indexOf(element);
+        var nextIndex = currentIndex + 1;
+        var nextInput = inputs[nextIndex];
+        if (nextInput) {
+          nextInput.focus();
+        }
+      }
+    }
+</script>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="puzzle-container">
+                    <p>Unscramble these Jumbles, one letter to each square, to form ordinary words.</p>
+                    <div class="jumble-words">
+                        {% for jumble in jumbles %}
+                        <div class="{{ 'text-right' if loop.index is odd else 'text-left' }} jumble-group">
+                            <div>{{ jumble.jumbled }}</div>
+                            <div> 
+                                {% for letter in jumble.jumbled %}
+                                <input type="text" class="{{ 'input-letter' if loop.index0 not in jumble.clue_indices else 'input-letter-cue' }}" maxlength="1" oninput="handleInput(this, '{{jumble.jumbled}}')" />
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <hr class="solid">
+                    <div class="answer-boxes text-center">
+                        <p>Now arrange the circled letters to form the surprise answer, as suggested by the cartoon.</p>
+                        {% for idx in range(solution_lenght) %}
+                        <input type="text" class="input-letter-cue" maxlength="1" oninput="handleInput(this)"/>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="jumble-header text-center mb-3">
+                    <h1>THE DAILY JUMBLE</h1>
+                    <div class="date">{{ value_date }}</div>
+                </div>
+                <div class="cartoon-placeholder">
+                    [Cartoon placeholder]
+                </div>
+                <div class="cartoon-caption mt-4">
+                    "{{ clue_sentence }}"
+                </div>
+                <button type="submit">Submit your answer</button> 
+            </div>
+        </div>
+    </div>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

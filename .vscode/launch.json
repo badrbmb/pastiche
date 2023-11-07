@@ -29,6 +29,20 @@
                 "force_update=False",
             ],
             "console": "integratedTerminal"
-        }
+        },
+        {
+            "name": "PasticheAPI",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "cwd": "${workspaceFolder}/pastiche",
+            "args": [
+                "main:app",
+                "--reload",
+                "--port",
+                "8000"
+            ],
+            "console": "integratedTerminal"
+        },
     ]
 }

@@ -1,5 +1,6 @@
 from pathlib import Path
 import logging
+from datetime import datetime, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError, NoResultFound, ProgrammingError
@@ -25,18 +26,21 @@ def create_tables(drop_if_exists: True):
     tables.Base.metadata.create_all(engine)
 
 
-def populate_database(path: str | Path) -> None:
+def populate_database(path: str | Path, reset_dates: bool = True) -> None:
     """Populates database with historical jumble games"""
 
     historical_games = JumbleGameCollection.parse_historical_jumbles(path)
 
     with SessionLocal() as db:
         jumble_games = []
-        for game in historical_games.games:
+        for i, game in enumerate(historical_games.games):
             game_dict = game.model_dump()
             jumbles_list = game_dict.pop("jumbles")
             jumbles = [tables.Jumble(**t) for t in jumbles_list]
-            jumble_games.append(tables.JumbleGame(**game_dict, jumbles=jumbles))
+            if reset_dates:
+                game_dict["value_date"] = datetime.today() + timedelta(days=i)
+            jumble_game = tables.JumbleGame(**game_dict, jumbles=jumbles)
+            jumble_games.append(jumble_game)
 
         db.add_all(jumble_games)
         db.commit()

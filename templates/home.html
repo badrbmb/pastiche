@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="../static/styles.css" rel="stylesheet">
+    <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
     <title>Daily Jumble</title>
 </head>
 <script>
@@ -21,6 +21,7 @@
       }
     }
 </script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <body>
     <div class="container mt-5">
         <div class="row">
@@ -99,10 +100,11 @@
                 <div class="cartoon-caption mt-4">
                     "AFTER ASKING THE JUMBLE ARTIST TO HELP HER GET ON 'THE PRICE IS RIGHT,' HE ______ ______"
                 </div>
+                <div class="text-center mt-3">
+                    <button type="submit" class="btn btn-secondary">Submit your answer</button>
+                </div>
             </div>
         </div>
     </div>
-
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

@@ -33,6 +33,9 @@ class Jumble(Base):
     def get_clue_indices(self):
         return [int(index) for index in self.clue_indices.split(",")]
 
+    def to_sanitized_dict(self):
+        return {"jumbled": self.jumbled, "clue_indices": self.get_clue_indices()}
+
 
 class JumbleGame(Base):
     __tablename__ = "jumble_games"
@@ -45,3 +48,11 @@ class JumbleGame(Base):
     jumbles: Mapped[list["Jumble"]] = relationship(
         back_populates="jumble_game", cascade="all, delete-orphan"
     )
+
+    def to_sanitized_dict(self) -> dict[str, Any]:
+        return {
+            "value_date": self.value_date.strftime("%A, %B %d"),
+            "solution_lenght": len(self.solution),
+            "clue_sentence": self.clue_sentence,
+            "jumbles": [t.to_sanitized_dict() for t in self.jumbles],
+        }
