@@ -54,11 +54,11 @@ async def play_jumble():
 async def load_daily_jumble(
     request: Request, value_date: date, db: Session = Depends(get_db)
 ):
-    game = crud.read_jumble_game(db, value_date=value_date) or crud.read_first_game(db)
+    game = crud.read_jumble_game(db, value_date=value_date)
     if game is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Game for {value_date} not found!",
+            detail=f"No game found for {value_date}",
         )
     context = {"request": request}
     context.update(**game.to_sanitized_dict())

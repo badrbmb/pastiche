@@ -9,7 +9,7 @@ def read_first_game(db: Session) -> tables.JumbleGame:
     return db.query(tables.JumbleGame).first()
 
 
-def read_jumble_game(db: Session, value_date: datetime) -> tables.JumbleGame:
+def read_jumble_game(db: Session, value_date: datetime) -> tables.JumbleGame | None:
     return (
         db.query(tables.JumbleGame)
         .filter(
