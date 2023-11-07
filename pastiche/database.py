@@ -1,6 +1,8 @@
 from pathlib import Path
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import OperationalError, NoResultFound, ProgrammingError
 
 from pastiche.game import JumbleGameCollection
 from pastiche import tables
@@ -10,6 +12,9 @@ DB_URL = f"sqlite:///{LOCAL_DB_PATH}"
 engine = create_engine(DB_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def create_tables(drop_if_exists: True):
@@ -37,10 +42,20 @@ def populate_database(path: str | Path) -> None:
         db.commit()
 
 
-if __name__ == "__main__":
-    # create_tables(drop_if_exists=True)
-    # populate_database(path="./data/jumble_data.json")
+def check_and_populate_db(path: str | Path) -> None:
+    """Check if the database exists and is populated, if not, create tables and populate database"""
+    try:
+        # try to get the first record from the table
+        with SessionLocal() as db:
+            record = db.query(tables.JumbleGame).first()
+            if record is None:
+                raise NoResultFound
+    except (NoResultFound, OperationalError, ProgrammingError):
+        # if the table does not exist or is empty, create tables and populate database
+        logger.info(
+            "Database is not created or not populated. Creating tables and populating database..."
+        )
+        create_tables(drop_if_exists=True)
+        populate_database(path)
 
-    with SessionLocal() as db:
-        result = db.query(tables.JumbleGame).first()
-        print(result.jumbles[0].jumbled)
+    logger.info("Database is ready (＾◡＾)っ✂╰⋃╯")
