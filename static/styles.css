@@ -66,3 +66,9 @@ body {
     border: 1px solid #dee2e6;
     border-radius: 0.25rem;
 }
+.results {
+    background-color: #e9ecef; 
+    text-align: center;
+    padding-top: 100px;
+    margin: 20px;
+}

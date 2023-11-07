@@ -3,6 +3,8 @@ from datetime import datetime
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship, declarative_base
 
+from pastiche.config import DISPLAY_DATE_FORMAT
+
 Base = declarative_base()
 
 
@@ -51,7 +53,7 @@ class JumbleGame(Base):
 
     def to_sanitized_dict(self) -> dict[str, Any]:
         return {
-            "value_date": self.value_date.strftime("%A, %B %d"),
+            "value_date": self.value_date.strftime(DISPLAY_DATE_FORMAT),
             "solution_lenght": len(self.solution),
             "clue_sentence": self.clue_sentence,
             "jumbles": [t.to_sanitized_dict() for t in self.jumbles],

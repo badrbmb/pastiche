@@ -10,3 +10,5 @@ LOCAL_GAMES_PATH = DATA_DIR / "jumble_data.json"
 
 STATIC_DIRECTORY = (ROOT_DIR / "static").as_posix()
 TEMPLATES_DIRECTORY = (ROOT_DIR / "templates").as_posix()
+
+DISPLAY_DATE_FORMAT = "%A, %B %d %Y"

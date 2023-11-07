@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, Form
 from fastapi import HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -63,3 +63,21 @@ async def load_daily_jumble(
     context = {"request": request}
     context.update(**game.to_sanitized_dict())
     return templates.TemplateResponse("index.html", context)
+
+
+@app.post("/check")
+async def check_submission(
+    value_date: str = Form(...),
+    jumble_letters: list[str] = Form(...),
+    solution_letters: list[str] = Form(...),
+    db: Session = Depends(get_db),
+):
+    # convert back to date
+    value_date = datetime.strptime(value_date, config.DISPLAY_DATE_FORMAT)
+    # load jumble solution
+    game = crud.read_jumble_game(db, value_date=value_date)
+    is_correct = "".join(solution_letters) == game.solution
+    # return templates.TemplateResponse("check.html", {"request": request})
+    return {
+        "is_correct": is_correct,
+    }

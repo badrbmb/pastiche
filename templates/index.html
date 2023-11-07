@@ -25,50 +25,81 @@
       }
     }
 </script>
+<script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
+<script>
+    function handleFormSubmit(form) {
+        // stop form from submitting normally
+        event.preventDefault();
+        // use Fetch API or any AJAX library to submit form
+        fetch(form.action, {
+            method : "POST",
+            body: new FormData(form),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // update div with id="results"
+            let output = "";
+            if (data.is_correct) {
+                output += '<p style="color:green; text-align: center;">Well done ※\(^o^)/※</p>'
+                output += '<dotlottie-player src="https://lottie.host/7684ce67-b168-401d-9730-9ff6d578b2cc/Nd5PLkFxzr.json" background="#f8f9fa" speed="1" style="width: 300px; height: 300px" direction="1" mode="normal" autoplay></dotlottie-player>'
+            }
+            else {
+                output += '<p style="color:red; text-align: center;">You guessed wrong •͡˘㇁•͡˘ \nKeep trying!</p>'
+            }
+            document.getElementById('results').innerHTML = output;
+        });
+    }
+  </script>
 <body>
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="puzzle-container">
-                    <p>Unscramble these Jumbles, one letter to each square, to form ordinary words.</p>
-                    <div class="jumble-words">
-                        {% for jumble in jumbles %}
-                        <div class="{{ 'text-right' if loop.index is odd else 'text-left' }} jumble-group">
-                            <div>{{ jumble.jumbled }}</div>
-                            <div> 
-                                {% for letter in jumble.jumbled %}
-                                <input type="text" class="{{ 'input-letter' if loop.index0 not in jumble.clue_indices else 'input-letter-cue' }}" maxlength="1" oninput="handleInput(this, '{{jumble.jumbled}}')" />
-                                {% endfor %}
+    <form action="/check" id="form" method="post" onsubmit="handleFormSubmit(this);">
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="puzzle-container">
+                        <p>Unscramble these Jumbles, one letter to each square, to form ordinary words.</p>
+                        <div class="jumble-words">
+                            {% for jumble in jumbles %}
+                            <div class="{{ 'text-right' if loop.index is odd else 'text-left' }} jumble-group">
+                                <div>{{ jumble.jumbled }}</div>
+                                <div> 
+                                    {% for letter in jumble.jumbled %}
+                                    <input type="text" name="jumble_letters" class="{{ 'input-letter' if loop.index0 not in jumble.clue_indices else 'input-letter-cue' }}" maxlength="1" oninput="handleInput(this, '{{jumble.jumbled}}')" />
+                                    {% endfor %}
+                                </div>
                             </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
+                        <hr class="solid">
+                        <div class="answer-boxes text-center">
+                            <p>Now arrange the circled letters to form the surprise answer, as suggested by the cartoon.</p>
+                            {% for idx in range(solution_lenght) %}
+                            <input type="text" name="solution_letters" class="input-letter-cue" maxlength="1" oninput="handleInput(this)"/>
+                            {% endfor %}
+                        </div>
                     </div>
-                    <hr class="solid">
-                    <div class="answer-boxes text-center">
-                        <p>Now arrange the circled letters to form the surprise answer, as suggested by the cartoon.</p>
-                        {% for idx in range(solution_lenght) %}
-                        <input type="text" class="input-letter-cue" maxlength="1" oninput="handleInput(this)"/>
-                        {% endfor %}
+                </div>
+                <div class="col-lg-6">
+                    <div class="jumble-header text-center mb-3">
+                        <h1>THE DAILY JUMBLE</h1>
+                        <div class="date">{{ value_date }}</div>
                     </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="jumble-header text-center mb-3">
-                    <h1>THE DAILY JUMBLE</h1>
-                    <div class="date">{{ value_date }}</div>
-                </div>
-                <div class="cartoon-placeholder">
-                    [Cartoon placeholder]
-                </div>
-                <div class="cartoon-caption mt-4">
-                    "{{ clue_sentence }}"
-                </div>
-                <div class="text-center mt-3">
-                    <button type="submit" class="btn btn-secondary">Submit your answer</button>
+                    <div class="cartoon-placeholder">
+                        [Cartoon placeholder]
+                    </div>
+                    <div class="cartoon-caption mt-4">
+                        '{{ clue_sentence }}'
+                    </div>
+                    <input type="hidden" name="value_date" value="{{ value_date }}">
+                    <div class="text-center mt-3">
+                        <button type="submit" class="btn btn-secondary">Submit your answer</button>
+                    </div>
+                    <div class="text-center mt-3">
+                        <div type="results" id="results"></div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
