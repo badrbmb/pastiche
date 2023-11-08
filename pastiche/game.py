@@ -1,10 +1,10 @@
 import re
 import pandas as pd
-from pydantic import BaseModel, Field, field_validator, computed_field
+from pydantic import BaseModel, Field, field_validator, computed_field, ValidationError
 from datetime import datetime
 from tqdm import tqdm
 
-MAX_LENGHT_CLUE = 17
+WORD_LIST = {"A", "AN", "FOR", "HER", "HIS", "IN", "IT", "THE", "THEIR", "TO", "WAS"}
 
 
 class Jumble(BaseModel):
@@ -15,6 +15,7 @@ class Jumble(BaseModel):
     @field_validator("unjumbled")
     def solution_has_same_letters_as_scrambled(cls, input_value: str, values):
         scrambled = values.data.get("jumbled")
+        input_value = cls.clean_string(input_value)
         if set(scrambled) != set(input_value):
             raise ValueError(
                 "The unjumbled must contain the same letters as the jumbled word"
@@ -42,10 +43,20 @@ class Jumble(BaseModel):
     def __hash__(self) -> int:
         return hash(self.unjumbled)
 
+    def clean_string(input_string):
+        cleaned_string = re.sub(r"\*.*\*", "", input_string)
+        return cleaned_string.strip()
+
 
 class JumbleGame(BaseModel):
+    url_from: str
     value_date: datetime | str
-    solution: str = Field(..., description="The missing words in the clue_sentence")
+    solution_unjumbled: str = Field(
+        ..., description="The unjumbled solution to the clue sentence"
+    )
+    solution_jumbled: str = Field(
+        ..., description="The jumbled solution to the clue sentence"
+    )
     jumbles: list[Jumble]
     clue_sentence: str = Field(
         ..., description="The sentence with missing words to guess"
@@ -57,16 +68,11 @@ class JumbleGame(BaseModel):
             value = datetime.strptime(value, "%Y-%m-%d")
         return value
 
-    @field_validator("solution")
-    def remove_all_non_alphabetical_letters(cls, value: str) -> str:
-        cleaned_string = re.sub(r"[^a-zA-Z]", "", value)
-        return cleaned_string.upper()
-
     @field_validator("jumbles")
     def assign_clue_indices_to_each_jumble(
         cls, value: list[Jumble], values
     ) -> list[Jumble]:
-        solution = values.data.get("solution")
+        solution = cls.clean_string(values.data.get("solution_unjumbled"))
         jumbles = []
         for jumble, indices in cls.find_indices(solution, jumbles=value).items():
             if len(indices) > 0:
@@ -82,6 +88,23 @@ class JumbleGame(BaseModel):
             "clue letters do not match the solution!"
         )
         return jumbles
+
+    @staticmethod
+    def add_parentheses(text: str, word_list: set[str]):
+        """wraps any occurence of words in the word_list between parentheses"""
+        for word in word_list:
+            text = re.sub(r"\b" + word + r"\b", "(" + word + ")", text)
+        return text
+
+    @staticmethod
+    def clean_string(value: str) -> str:
+        cleaned_string = re.sub(r"[^a-zA-Z]", "", re.sub("\s*\(.*?\)\s*", "", value))
+        return cleaned_string.upper()
+
+    @computed_field
+    @property
+    def solution(self) -> str:
+        return self.clean_string(self.solution_unjumbled)
 
     @staticmethod
     def find_indices(solution: str, jumbles: list[Jumble]):
@@ -126,43 +149,30 @@ class JumbleGame(BaseModel):
             substring += string[index]
         return substring
 
+    @classmethod
+    def from_row(cls, row: pd.Series) -> "JumbleGame":
+        data = row.to_dict()
+        data["jumbles"] = [Jumble(**t) for t in data["jumbles"]]
+        try:
+            return cls(**data)
+        except ValidationError:
+            # special cases where the jumbled solution needs extra cleaning
+            data["solution_unjumbled"] = cls.add_parentheses(
+                data["solution_unjumbled"], WORD_LIST
+            )
+            return cls(**data)
+
 
 class JumbleGameCollection:
     def __init__(self, games: list[JumbleGame]) -> None:
         self.games = games
 
     @classmethod
-    def parse_historical_jumbles(cls, path: str) -> "JumbleGameCollection":
-        """Function to parse dowloaded Jumble games into respective jumble objects with their computed properties"""
-        df = pd.read_json(path_or_buf=path, lines=True)
-        df.sort_values("value_date", inplace=True)
-
-        df_clues = df[df["jumbled"].apply(lambda x: len(x) > MAX_LENGHT_CLUE)].copy()
-        df_jumbles = df[df["jumbled"].apply(lambda x: len(x) <= MAX_LENGHT_CLUE)].copy()
-
-        all_games = []
-        for value_date, df_j in tqdm(df_jumbles.groupby("value_date")):
-            df_ref_clues = df_clues.loc[df_clues["value_date"] == value_date].copy()
-            for _, row in df_ref_clues.iterrows():
-                clue_sentence = row["jumbled"]
-                solution = row["unjumbled"]
-                # get all jumbles
-                df_candidates = df_j[
-                    ~df_j["unjumbled"].isin(df_ref_clues["unjumbled"].unique())
-                ].copy()
-                jumbles = [
-                    Jumble(**t)
-                    for t in df_candidates[["jumbled", "unjumbled"]].to_dict("records")
-                ]
-                # create game
-                game = JumbleGame(
-                    value_date=value_date,
-                    jumbles=jumbles,
-                    clue_sentence=clue_sentence,
-                    solution=solution,
-                )
-                all_games.append(game)
-
+    def from_jumble_answers(cls, path: str) -> "JumbleGameCollection":
+        df = pd.read_json(path, lines=True)
         return JumbleGameCollection(
-            games=sorted(all_games, key=lambda x: (x.value_date, x.solution))
+            games=[
+                JumbleGame.from_row(row)
+                for _, row in tqdm(df.iterrows(), total=len(df))
+            ]
         )

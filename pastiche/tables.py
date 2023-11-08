@@ -43,8 +43,11 @@ class JumbleGame(Base):
     __tablename__ = "jumble_games"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    url_from: Mapped[str] = mapped_column(nullable=False)
     value_date: Mapped[datetime] = mapped_column(nullable=True)
     solution: Mapped[str] = mapped_column(nullable=False)
+    solution_unjumbled: Mapped[str] = mapped_column(nullable=False)
+    solution_jumbled: Mapped[str] = mapped_column(nullable=False)
     clue_sentence: Mapped[str] = mapped_column(nullable=False)
 
     jumbles: Mapped[list["Jumble"]] = relationship(

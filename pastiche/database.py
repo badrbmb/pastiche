@@ -29,7 +29,7 @@ def create_tables(drop_if_exists: True):
 def populate_database(path: str | Path, reset_dates: bool = True) -> None:
     """Populates database with historical jumble games"""
 
-    historical_games = JumbleGameCollection.parse_historical_jumbles(path)
+    historical_games = JumbleGameCollection.from_jumble_answers(path)
 
     with SessionLocal() as db:
         jumble_games = []
@@ -63,3 +63,9 @@ def check_and_populate_db(path: str | Path) -> None:
         populate_database(path)
 
     logger.info("Database is ready (＾◡＾)っ✂╰⋃╯")
+
+
+if __name__ == "__main__":
+    from pastiche.config import LOCAL_GAMES_PATH
+
+    check_and_populate_db(LOCAL_GAMES_PATH)
