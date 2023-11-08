@@ -104,3 +104,13 @@ body {
     margin: 5px;
     font-weight: bold;
 }
+.input-letter-solution {
+    margin: 0 0px;
+    width: 32px;
+    height: 30px;
+    border: 2px solid #272a35;
+    border-radius: 10px;
+    text-align: center;
+    background-color: #e3f2fd;
+    color: #272a35;
+}

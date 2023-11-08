@@ -7,85 +7,9 @@
     <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
     <title>Pastiche - Jumble</title>
 </head>
-<script>
-    function handleInput(element, allowedChars = null) {
-      element.value = element.value.toUpperCase();
-      if (allowedChars !== null && !allowedChars.includes(element.value)) {
-        alert('Sorry, `' + element.value + '` is not a valid option ¯\_(ツ)_/¯. \nPlease pick one letter from `' + allowedChars + '`');
-        element.value = '';
-      }
-      if (element.value != '') {
-        var inputs = document.getElementsByTagName("input");
-        var currentIndex = Array.from(inputs).indexOf(element);
-        var nextIndex = currentIndex + 1;
-        var nextInput = inputs[nextIndex];
-        if (nextInput) {
-          nextInput.focus();
-        }
-      }
-    }
-</script>
 <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script>
-    $(document).ready(function () {
-        // function to get all input letters counting towards the solution
-        function getAvailableLetters() {
-            var availableLetters = "";
-            $.each($("[name=jumble_letters]"), function() {
-                var value = $(this).val();
-                if (value) {
-                    availableLetters += value.toUpperCase();
-                }
-            });
-            return availableLetters;
-        } 
-        
-        // function to set the available letters based on the inputs
-        $("[name=jumble_letters]").on('input', function () {
-            var availableLetters = getAvailableLetters();
-            $(".available-letters").text(availableLetters);
-        });
-
-        // function to set the available letters based on the used inputs in the solution
-        $("[name=solution_letters]").on('input', function () {
-            var availableLetters = getAvailableLetters();
-            var solutionLetters = '';
-            $("[name=solution_letters]").each(function() {
-                solutionLetters += $(this).val();
-            });
-            // Remove solution letters from availableLetters
-            for (var i = 0; i < solutionLetters.length; i++) {
-                availableLetters = availableLetters.replace(solutionLetters.charAt(i).toUpperCase(), '');
-            }
-            $(".available-letters").text(availableLetters);
-        });
-    });
-</script>
-<script>
-    function handleFormSubmit(form) {
-        // stop form from submitting normally
-        event.preventDefault();
-        // use Fetch API or any AJAX library to submit form
-        fetch(form.action, {
-            method : "POST",
-            body: new FormData(form),
-        })
-        .then(response => response.json())
-        .then(data => {
-            // update div with id="results"
-            let output = "";
-            if (data.is_correct) {
-                output += '<p style="color:green; text-align: center;">Well done ※\(^o^)/※</p>'
-                output += '<div class="success-container"><dotlottie-player src="https://lottie.host/7684ce67-b168-401d-9730-9ff6d578b2cc/Nd5PLkFxzr.json" background="#00000000" speed="1" style="width: 800px; height: 800px" direction="1" mode="normal" autoplay></dotlottie-player></div>'
-            }
-            else {
-                output += '<p style="color:red; text-align: center;">You guessed wrong •͡˘㇁•͡˘ \nKeep trying!</p>'
-            }
-            document.getElementById('results').innerHTML = output;
-        });
-    }
-  </script>
+<script src="{{ url_for('static', path='scripts.js') }}"></script>
 <body>
     <form action="/check" id="form" method="post" onsubmit="handleFormSubmit(this);">
         <div class="container mt-5">
@@ -114,7 +38,7 @@
                             </div>
                             {% for letter in sanitized_solution %}
                                 {% if letter == "*" %}
-                                    <input type="text" name="solution_letters" class="input-letter-cue" maxlength="1" oninput="handleInput(this)"/>
+                                    <input type="text" name="solution_letters" class="input-letter-solution" maxlength="1" oninput="handleInput(this)"/>
                                 {% else %}
                                     <input name="fill_letters" class="filled-letter" maxlength="1" value = "{{ letter }}" disabled/>
                                 {% endif %}
