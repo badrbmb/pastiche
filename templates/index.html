@@ -72,8 +72,12 @@
                         <hr class="solid">
                         <div class="answer-boxes text-center">
                             <p>Now arrange the circled letters to form the surprise answer, as suggested by the cartoon.</p>
-                            {% for idx in range(solution_lenght) %}
-                            <input type="text" name="solution_letters" class="input-letter-cue" maxlength="1" oninput="handleInput(this)"/>
+                            {% for letter in sanitized_solution %}
+                                {% if letter == "*" %}
+                                    <input type="text" name="solution_letters" class="input-letter-cue" maxlength="1" oninput="handleInput(this)"/>
+                                {% else %}
+                                    <input name="fill_letters" class="filled-letter" maxlength="1" value = "{{ letter }}" disabled/>
+                                {% endif %}
                             {% endfor %}
                         </div>
                     </div>

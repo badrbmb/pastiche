@@ -45,6 +45,17 @@ body {
     background-color: #e3f2fd;
     color: #272a35;
 }
+.filled-letter {
+    font-size: 0.8rem;
+    font-style: italic;
+    margin: 0 0px;
+    width: 15px;
+    height: 30px;
+    border: none;
+    text-align: center;
+    background-color: #ffffff;
+    color: #272a35;
+}
 .cartoon-caption {
     font-style: italic;
 }

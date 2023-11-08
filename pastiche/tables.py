@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship, declarative_base
 
-from pastiche.config import DISPLAY_DATE_FORMAT
+from pastiche.config import DISPLAY_DATE_FORMAT, SANITIZE_SUB
 
 Base = declarative_base()
 
@@ -54,10 +54,42 @@ class JumbleGame(Base):
         back_populates="jumble_game", cascade="all, delete-orphan"
     )
 
+    @staticmethod
+    def sanitize_solution(solution: str, letters: str, sub: str = SANITIZE_SUB):
+        """
+        Sanitises a solution by replacing all letters present in solution by _ without touching the words special characters or worlds between ()
+        example:
+        sanitize_solution('DAY IN (AND) DAY OUT', 'DAYINDAYOUT')
+        >>> '*** ** (AND) *** ***'
+        """
+        output = []
+        in_parenthesis = False
+        for character in solution:
+            # Check if character is '(', and then we start skipping
+            if character == "(":
+                in_parenthesis = True
+            # Check if character is ')', and then we stop skipping
+            elif character == ")":
+                in_parenthesis = False
+            # If character is not in parenthesis & found in letters, replace it with sub
+            if (
+                not in_parenthesis
+                and character.upper() in letters.upper()
+                and character.isalpha()
+            ):
+                output.append(sub)
+            else:  # Append the character as it is.
+                output.append(character)
+        return "".join(output)
+
+    @property
+    def sanitized_solution(self):
+        return self.sanitize_solution(self.solution_unjumbled, self.solution)
+
     def to_sanitized_dict(self) -> dict[str, Any]:
         return {
             "value_date": self.value_date.strftime(DISPLAY_DATE_FORMAT),
-            "solution_lenght": len(self.solution),
+            "sanitized_solution": self.sanitized_solution,
             "clue_sentence": self.clue_sentence,
             "jumbles": [t.to_sanitized_dict() for t in self.jumbles],
         }
