@@ -13,18 +13,36 @@
             "justMyCode": true
         },
         {
-            "name": "JumbleSpider",
+            "name": "JumbleSolverSpider",
             "type": "python",
             "request": "launch",
             "module": "scrapy",
             "cwd": "../jumble_scraper",
             "args": [
                 "crawl",
-                "jumble_spider",
+                "jumble_solver_spider",
                 "-a",
                 "date_offset=1095",
                 "-a",
                 "output_path=../../data/jumble_data.json",
+                "-a",
+                "force_update=False",
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "JumbleAnswersSpider",
+            "type": "python",
+            "request": "launch",
+            "module": "scrapy",
+            "cwd": "${workspaceFolder}/jumble_scraper",
+            "args": [
+                "crawl",
+                "jumble_answers_spider",
+                "-a",
+                "date_offset=1095",
+                "-a",
+                "output_path=${workspaceFolder}/data/jumble_answers_data.json",
                 "-a",
                 "force_update=False",
             ],
