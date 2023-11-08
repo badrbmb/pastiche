@@ -7,9 +7,6 @@ body {
     border-radius: 0.25rem;
     padding: 20px;
 }
-.jumble-header h1 {
-    margin-bottom: 0;
-}
 .date {
     font-size: 0.85rem;
 }
@@ -71,4 +68,12 @@ body {
     text-align: center;
     padding-top: 100px;
     margin: 20px;
+}
+.jumble-header {
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    top: 0; 
+    left: 0; 
+    background-color: rgba(230,230,230,0.5); 
 }

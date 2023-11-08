@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
-    <title>Daily Jumble</title>
+    <title>Pastiche - Jumble</title>
 </head>
 <script>
-    function handleInput(element, allowedChars) {
+    function handleInput(element, allowedChars = null) {
       element.value = element.value.toUpperCase();
-      if (!allowedChars.includes(element.value)) {
+      if (allowedChars !== null && !allowedChars.includes(element.value)) {
         alert('Sorry, `' + element.value + '` is not a valid option ¯\_(ツ)_/¯. \nPlease pick one letter from `' + allowedChars + '`');
         element.value = '';
       }
@@ -80,7 +80,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="jumble-header text-center mb-3">
-                        <h1>THE DAILY JUMBLE</h1>
+                        <img src="{{ url_for('static', path='/pastiche-logo.png') }}" alt="Pastiche Jumble" style="width: 100%; height: 150px">
                         <div class="date">{{ value_date }}</div>
                     </div>
                     <div class="cartoon-placeholder">

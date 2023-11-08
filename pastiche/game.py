@@ -76,7 +76,7 @@ class JumbleGame(BaseModel):
 
         # make sure the letter from all the jumbles return the desired word
         clue_letters = "".join(
-            [cls.create_substring(t.jumbled, t.clue_indices) for t in jumbles]
+            [cls.create_substring(t.unjumbled, t.clue_indices) for t in jumbles]
         )
         assert set(solution) == set(clue_letters), ValueError(
             "clue letters do not match the solution!"
@@ -97,8 +97,7 @@ class JumbleGame(BaseModel):
         for s_letter in solution_letters:
             found = False
             for jumble in jumbles:
-                scrambled = jumble.jumbled
-                for i, w_letter in enumerate(scrambled):
+                for i, w_letter in enumerate(jumble.unjumbled):
                     if s_letter == w_letter and i not in used_indices[jumble]:
                         # If the letter in the solution word matches the letter in the word
                         # And it has not been used yet, add the index to the list
