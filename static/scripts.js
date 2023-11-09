@@ -108,12 +108,17 @@ function handleFormSubmit(form) {
         let output = "";
         if (data.is_correct) {
             output += '<p style="color:green; text-align: center;">Well done ※\(^o^)/※</p>'
+            output += '<p style="color:green; text-align: center;">Redirecting you to home ...</p>'
             output += '<div class="success-container"><dotlottie-player src="https://lottie.host/7684ce67-b168-401d-9730-9ff6d578b2cc/Nd5PLkFxzr.json" background="#00000000" speed="1" style="width: 800px; height: 800px" direction="1" mode="normal" autoplay></dotlottie-player></div>'
             // store results in localStore for statistics
             let valueDate = form.elements.value_date.value;
             // compute the elasped time
             let elapsedTime = computeElapsedTime()
             storeValueDate(valueDate, elapsedTime);
+            // redirect to home page after 3 seconds
+            setTimeout(function() {
+                window.location.href = "/";
+            }, 3000);
         }
         else {
             output += '<p style="color:red; text-align: center;">You guessed wrong •͡˘㇁•͡˘ \nKeep trying!</p>'

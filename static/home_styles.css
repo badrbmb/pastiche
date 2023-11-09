@@ -17,6 +17,7 @@ body {
     padding: 20px;
     margin-bottom: 30px;
     width: 450px;
+    font-style: italic;
 }
 .statistics h2 {
     text-align: center;
@@ -49,3 +50,10 @@ body {
     font-size: 1.5em;
     text-align: center;
 }
+.conditional-play {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  

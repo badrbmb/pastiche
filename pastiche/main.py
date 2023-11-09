@@ -1,3 +1,5 @@
+from itertools import groupby
+import pandas as pd
 from datetime import date, datetime
 from contextlib import asynccontextmanager
 
@@ -83,10 +85,38 @@ async def check_submission(
 
 
 @app.post("/statistics")
-async def compute_statistics(value_dates: set[str]):
-    # convert back to date
-    value_dates = [
-        datetime.strptime(t, config.DISPLAY_DATE_FORMAT) for t in value_dates
-    ]
-    count_played = len(value_dates)
-    return None
+async def compute_statistics(value_dates: list[dict[str, str | int]]):
+    """End point to compute statistics based on a list of value_date played"""
+    if len(value_dates) > 0:
+        df = pd.DataFrame(value_dates)
+        df["valueDate"] = df["valueDate"].apply(
+            lambda x: datetime.strptime(x, config.DISPLAY_DATE_FORMAT)
+        )
+        fastest_time = int(df["elapsedTime"].min())
+        count_played = int(df["valueDate"].nunique())
+
+        df.set_index("valueDate", inplace=True)
+        df = df.resample("D").first()
+        df.sort_index(inplace=True)
+
+        played_dates = ~df["elapsedTime"].isnull()
+
+        consecutive_dates = []
+        for k, g in groupby(enumerate(played_dates), lambda x: x[1]):
+            if k:
+                consecutive_dates.append(list(map(lambda x: x[0], list(g))))
+
+        max_streak = int(max([len(t) for t in consecutive_dates]))
+        current_streak = int([len(t) for t in consecutive_dates][-1])
+    else:
+        count_played = 0
+        fastest_time = None
+        max_streak = 0
+        current_streak = 0
+
+    return {
+        "played": count_played,
+        "fastest": fastest_time,
+        "max_streak": max_streak,
+        "current_streak": current_streak,
+    }

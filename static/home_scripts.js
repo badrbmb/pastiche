@@ -61,27 +61,89 @@ function getCountDownToMidnight() {
     return countdownTime
 }
 
+function fetchStatistics(valueDatesArray) {
+    fetch("/statistics", {
+        method : "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(valueDatesArray),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Network response was not ok ${response.ok}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        UpdateUserStatistics(data);
+    })
+    .catch( error => {
+        console.log('There has been a problem with your fetch operation: ', error.message);
+    });
+}
+
+function prettifyElapsedTime(milliseconds) {
+    let seconds = milliseconds / 100
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60, 1);
+    return `${mins}min ${secs}s`;
+}
+
+
+function UpdateUserStatistics(statistics) {
+    let currentStreak = statistics.current_streak
+    let fastest = statistics.fastest
+    let maxStreak = statistics.max_streak
+    let played = statistics.played
+
+    if (fastest == null) {
+        fastest = "-"
+    }
+    else {
+        fastest = prettifyElapsedTime(fastest)
+    }
+
+    let playedDiv = document.querySelector("#played")
+    playedDiv.textContent = played
+
+    let fastestDiv = document.querySelector("#fastest")
+    fastestDiv.textContent = fastest
+
+    let currentStreakDiv = document.querySelector("#current_streak")
+    currentStreakDiv.textContent = currentStreak
+
+    let maxStreakDiv = document.querySelector("#max_streak")
+    maxStreakDiv.textContent = maxStreak
+}
+
+
 
 window.onload = function () {
-    // check localStore if today's game have been played
     let valueDatesArray = loadValueDates();
+    //  update user statistics
+    fetchStatistics(valueDatesArray)
+
+    // check localStore if today's game have been played
     let is_played = checkTodayInValueDates(valueDatesArray);
 
     let playButton = document.querySelector('#button-play');
+    let timerDiv = document.querySelector("#timer-div")
     let countDown = document.querySelector('#countdown');
 
+    // update the div to be displayed
     if (is_played) {    
         // hide play button
         playButton.style.display = 'none';
         // display countdown
         let countdownTime = getCountDownToMidnight()
-        countDown.style.display = 'block';
+        timerDiv.style.display = 'block';
         startCountdown(countdownTime, countDown);
     }
     else {
         // display play button
         playButton.style.display = 'block';
         // hide countdown
-        countDown.style.display = 'none';
+        timerDiv.style.display = 'none';
     }
 };
