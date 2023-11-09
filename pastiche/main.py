@@ -41,7 +41,7 @@ def get_db():
 
 @app.get("/", response_class=HTMLResponse)
 async def landing_page(request: Request):
-    return templates.TemplateResponse("sample.html", {"request": request})
+    return templates.TemplateResponse("home.html", {"request": request})
 
 
 @app.get("/play")
