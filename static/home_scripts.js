@@ -84,9 +84,9 @@ function fetchStatistics(valueDatesArray) {
 }
 
 function prettifyElapsedTime(milliseconds) {
-    let seconds = milliseconds / 100
+    let seconds = milliseconds / 1000
     const mins = Math.floor(seconds / 60);
-    const secs = Math.round(seconds % 60, 1);
+    const secs = Math.round(seconds % 60, 2);
     return `${mins}min ${secs}s`;
 }
 

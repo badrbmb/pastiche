@@ -118,10 +118,20 @@ function handleFormSubmit(form) {
             // redirect to home page after 3 seconds
             setTimeout(function() {
                 window.location.href = "/";
-            }, 3000);
+            }, 3500);
         }
         else {
-            output += '<p style="color:red; text-align: center;">You guessed wrong •͡˘㇁•͡˘ \nKeep trying!</p>'
+            // check each individial jumble
+            for (var key in data.is_jumbles_correct) {
+                var isCorrect = data.is_jumbles_correct[key]
+                if (isCorrect) {
+                    output += '<p style="color:green; text-align: center;">Jumble #'+ key +' is correct ※\(^o^)/※ </p>';
+                }
+                else {
+                    output += '<p style="color:red; text-align: center;">Jumble #'+ key +' is wrong •͡˘㇁•͡˘ \nKeep trying! </p>';
+                }
+                
+            }
         }
         document.getElementById('results').innerHTML = output;
     });

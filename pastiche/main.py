@@ -78,10 +78,19 @@ async def check_submission(
     value_date = datetime.strptime(value_date, config.DISPLAY_DATE_FORMAT)
     # load jumble solution
     game = crud.read_jumble_game(db, value_date=value_date)
+    # check if global solution is correct
     is_correct = "".join(solution_letters) == game.solution
-    return {
-        "is_correct": is_correct,
-    }
+    # check if each jumble is correct
+    seen_letters = 0
+    jumbles_correct = {}
+    for i, jumble in enumerate(game.jumbles):
+        n_jumble = len(jumble.unjumbled)
+        to_check = jumble_letters[seen_letters : seen_letters + n_jumble]
+        jumbles_correct[i + 1] = "".join(to_check) == jumble.unjumbled
+
+        seen_letters += n_jumble
+
+    return {"is_correct": is_correct, "is_jumbles_correct": jumbles_correct}
 
 
 @app.post("/statistics")
