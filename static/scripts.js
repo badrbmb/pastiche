@@ -15,6 +15,12 @@ function handleInput(element, allowedChars = null) {
     }
 }
 
+window.onload = function() {
+    let currentTime = new Date().getTime();
+    localStorage.setItem('startTime', currentTime);
+}
+  
+
 // function to update the available letters to be used for the solution
 $(document).ready(function () {
     // get all input letters counting towards the solution
@@ -45,7 +51,6 @@ $(document).ready(function () {
         for (var i = 0; i < usedLetters.length; i++) {
             displayLetters = displayLetters.replace(usedLetters.charAt(i).toUpperCase(), '');
         }
-        console.log(usedLetters)
         return displayLetters;
     }
 
@@ -62,6 +67,33 @@ $(document).ready(function () {
     });
 });
 
+function storeValueDate(valueDate, elapsedTime) {
+    // Initialize valueDatesArray as Array
+    let valueDatesArray;
+    let valueDatesString = localStorage.getItem("valueDates")
+    try {
+        valueDatesArray = JSON.parse(valueDatesString);
+        if (!Array.isArray(valueDatesArray)) {
+            valueDatesArray = [];
+        }
+    } catch (e) {
+        valueDatesArray = [];
+    }
+    // add new object {valueDate, elapsedTime} to the array
+    valueDatesArray.push({ valueDate, elapsedTime });
+    // store the updated array back to localStorage
+    localStorage.setItem("valueDates", JSON.stringify(valueDatesArray));
+    console.log(valueDatesArray)
+}
+
+
+function computeElapsedTime() {
+    let loadTime = Number(localStorage.getItem("startTime"));
+    let currentTime = new Date().getTime();
+    let elapsedTime = currentTime - loadTime;
+    return elapsedTime;
+}
+
 function handleFormSubmit(form) {
     // stop form from submitting normally
     event.preventDefault();
@@ -77,6 +109,11 @@ function handleFormSubmit(form) {
         if (data.is_correct) {
             output += '<p style="color:green; text-align: center;">Well done ※\(^o^)/※</p>'
             output += '<div class="success-container"><dotlottie-player src="https://lottie.host/7684ce67-b168-401d-9730-9ff6d578b2cc/Nd5PLkFxzr.json" background="#00000000" speed="1" style="width: 800px; height: 800px" direction="1" mode="normal" autoplay></dotlottie-player></div>'
+            // store results in localStore for statistics
+            let valueDate = form.elements.value_date.value;
+            // compute the elasped time
+            let elapsedTime = computeElapsedTime()
+            storeValueDate(valueDate, elapsedTime);
         }
         else {
             output += '<p style="color:red; text-align: center;">You guessed wrong •͡˘㇁•͡˘ \nKeep trying!</p>'

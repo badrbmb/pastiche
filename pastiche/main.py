@@ -77,7 +77,16 @@ async def check_submission(
     # load jumble solution
     game = crud.read_jumble_game(db, value_date=value_date)
     is_correct = "".join(solution_letters) == game.solution
-    # return templates.TemplateResponse("check.html", {"request": request})
     return {
         "is_correct": is_correct,
     }
+
+
+@app.post("/statistics")
+async def compute_statistics(value_dates: set[str]):
+    # convert back to date
+    value_dates = [
+        datetime.strptime(t, config.DISPLAY_DATE_FORMAT) for t in value_dates
+    ]
+    count_played = len(value_dates)
+    return None

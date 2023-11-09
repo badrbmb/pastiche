@@ -26,8 +26,11 @@
             </div>
         </div>
         <div class="conditional-play text-center">
-            <button type="submit" class="btn btn-success btn-lg">Play now!</button>
-            <div class="timer" id="countdown" hidden>Next Wordle: 23:59:59</div>
+            <button id="button-play" class="btn btn-success btn-lg", onclick="location.href='/play'">Play now!</button>
+            <div class="timer">
+                <b>Next Jumble in</b>
+                <div id="countdown" >23 hrs 59 min 59 s</div>
+            </div>
         </div>
     </div>
     <script src="{{ url_for('static', path='home_scripts.js') }}"></script>
