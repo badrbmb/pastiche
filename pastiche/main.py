@@ -62,7 +62,10 @@ async def load_daily_jumble(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No game found for {value_date}",
         )
-    context = {"request": request}
+    context = {
+        "request": request,
+        "image_url": f"{config.BASE_IMAGE_URL}/{game.id}.jpg",
+    }
     context.update(**game.to_sanitized_dict())
     return templates.TemplateResponse("index.html", context)
 

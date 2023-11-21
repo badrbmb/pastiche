@@ -67,12 +67,12 @@ body {
     margin: 5px;
 }
 .cartoon-placeholder {
-    height: 300px; /* Adjust the height as needed */
+    height: 400px;
     background-color: #e9ecef; 
     text-align: center;
-    padding-top: 100px;
     border: 1px solid #dee2e6;
     border-radius: 0.25rem;
+    overflow: hidden; /* To ensure the image does not overflow the div */
 }
 .results {
     background-color: #e9ecef; 

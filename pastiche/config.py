@@ -15,3 +15,7 @@ TEMPLATES_DIRECTORY = (ROOT_DIR / "templates").as_posix()
 DISPLAY_DATE_FORMAT = "%A, %B %d %Y"
 
 SANITIZE_SUB = "*"
+
+BASE_IMAGE_URL = "https://storage.googleapis.com/pastiche-images/thumbnails"
+
+BUCKET_IMG = "pastiche-images"
