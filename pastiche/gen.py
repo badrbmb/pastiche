@@ -68,7 +68,7 @@ def download_image(url, filename):
 
         print("Image sucessfully Downloaded: ", filename)
     else:
-        print("Image Couldn't be retreived")
+        print("Image couldn't be retreived")
 
 
 def generate_jumble_images(
@@ -84,17 +84,21 @@ def generate_jumble_images(
         # check if an image already exists
         image_path = out_dir_raw / f"{game.id}.jpg"
 
-        # if image_path.is_file():
-        #     continue
+        if image_path.is_file():
+            continue
 
         try:
-            # image_prompt = generate_dall_e_prompt(
-            #     client, game.clue_sentence, game.solution_unjumbled
-            # )
-            # image_url = generate_image(client, image_prompt)
-            # download_image(image_url, image_path)
+            image_prompt = generate_dall_e_prompt(
+                client, game.clue_sentence, game.solution_unjumbled
+            )
+
+            image_url = generate_image(client, image_prompt)
+
+            download_image(image_url, image_path)
+
             thumbnail_path = resized_output_dir / f"{game.id}.jpg"
-            # generate_thumbnail(image_path, thumbnail_path)
+            generate_thumbnail(image_path, thumbnail_path)
+
             upload_blob(
                 bucket_name=bucket_name,
                 source_file_name=thumbnail_path,
