@@ -7,7 +7,7 @@ from sqlalchemy.exc import OperationalError, NoResultFound, ProgrammingError
 
 from pastiche.game import JumbleGameCollection
 from pastiche import tables
-from pastiche.config import LOCAL_DB_PATH
+from pastiche.config import LOCAL_DB_PATH, RESET_DATE
 
 DB_URL = f"sqlite:///{LOCAL_DB_PATH}"
 engine = create_engine(DB_URL)
@@ -38,7 +38,7 @@ def populate_database(path: str | Path, reset_dates: bool = True) -> None:
             jumbles_list = game_dict.pop("jumbles")
             jumbles = [tables.Jumble(**t) for t in jumbles_list]
             if reset_dates:
-                game_dict["value_date"] = datetime.today() + timedelta(days=i)
+                game_dict["value_date"] = RESET_DATE + timedelta(days=i)
             jumble_game = tables.JumbleGame(**game_dict, jumbles=jumbles)
             jumble_games.append(jumble_game)
 

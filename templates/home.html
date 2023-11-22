@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', path='home_styles.css') }}" rel="stylesheet">
+    <link href="/static/home_styles.css" rel="stylesheet">
     <title>Jumble Statistics</title>
 </head>
 <body>
     <div class="statistics">
-        <img src="{{ url_for('static', path='/pastiche-logo.png') }}" alt="Pastiche Jumble" style="width: 100%; height: 150px">
+        <img src="/static/pastiche-logo.png" alt="Pastiche Jumble" style="width: 100%; height: 150px">
         <h2>Statistics</h2>
         <div class="stats-headers-grid" >
             <div class="stats-grid">
@@ -33,6 +33,6 @@
             </div>
         </div>
     </div>
-    <script src="{{ url_for('static', path='home_scripts.js') }}"></script>
+    <script src="/static/home_scripts.js"></script>
 </body>
 </html>

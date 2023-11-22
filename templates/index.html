@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+    <link href="/static/styles.css" rel="stylesheet">
     <title>Pastiche - Jumble</title>
 </head>
 <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="{{ url_for('static', path='scripts.js') }}"></script>
+<script src="/static/scripts.js"></script>
 <body>
     <form action="/check" id="form" method="post" onsubmit="handleFormSubmit(this);">
         <div class="container mt-5">
@@ -23,7 +23,7 @@
                                 <div>{{ jumble.jumbled }}</div>
                                 <div> 
                                     {% for letter in jumble.jumbled %}
-                                    <input type="text" name="jumble_letters" class="{{ 'input-letter' if loop.index0 not in jumble.clue_indices else 'input-letter-cue' }}" maxlength="1" oninput="handleInput(this, '{{jumble.jumbled}}')" />
+                                    <input type="text" name="jumble_letters" class="{{ 'input-letter' if loop.index0 not in jumble.clue_indices else 'input-letter-cue' }}" maxlength="1" oninput="handleInput(this, '{{jumble.jumbled}}')" autocomplete="off" />
                                     {% endfor %}
                                 </div>
                             </div>
@@ -48,7 +48,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="jumble-header text-center mb-3">
-                        <img src="{{ url_for('static', path='/pastiche-logo.png') }}" alt="Pastiche Jumble" style="width: 100%; height: 150px">
+                        <img src="static/pastiche-logo.png" alt="Pastiche Jumble" style="width: 100%; height: 150px">
                         <div class="date">{{ value_date }}</div>
                     </div>
                     <div class="cartoon-placeholder">

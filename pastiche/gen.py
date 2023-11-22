@@ -143,7 +143,7 @@ if __name__ == "__main__":
         solutions = (
             db.query(tables.JumbleGame)
             .order_by(tables.JumbleGame.value_date)
-            .limit(30)
+            .limit(60)
             .all()
         )
     output_dir = config.DATA_DIR / "images/v1"

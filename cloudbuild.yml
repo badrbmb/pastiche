@@ -1,0 +1,5 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/pastiche-repo/pastiche:latest', '-f', "./Dockerfile",  '.' ]
+images:
+- 'europe-west1-docker.pkg.dev/$PROJECT_ID/pastiche-repo/pastiche:latest'

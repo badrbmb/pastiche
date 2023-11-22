@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 
 ROOT_DIR = Path(__file__).parent.parent.resolve()
 
@@ -19,3 +20,5 @@ SANITIZE_SUB = "*"
 BASE_IMAGE_URL = "https://storage.googleapis.com/pastiche-images/thumbnails"
 
 BUCKET_IMG = "pastiche-images"
+
+RESET_DATE = datetime(2023, 11, 8)
