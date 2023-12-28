@@ -1,14 +1,14 @@
-import sys
-import requests
 import shutil
-from openai import OpenAI
+import sys
 from pathlib import Path
-from tqdm import tqdm
-from google.cloud import storage
-from PIL import Image
 
-from pastiche import config
-from pastiche import tables
+import requests
+from google.cloud import storage
+from openai import OpenAI
+from PIL import Image
+from tqdm import tqdm
+
+from pastiche import config, tables
 from pastiche.database import SessionLocal
 
 
