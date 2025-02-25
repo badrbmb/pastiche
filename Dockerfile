@@ -29,7 +29,8 @@ COPY . .
 # install requirements
 RUN poetry install --only main
 
-# EXPOSE 8000
+EXPOSE 8080
 
-CMD poetry run uvicorn pastiche.main:app --host 0.0.0.0 --port $PORT
+CMD ["poetry", "run", "uvicorn", "pastiche.main:app", "--host", "0.0.0.0", "--port", "8080"]
+
 
