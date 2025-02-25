@@ -1,6 +1,7 @@
 import shutil
 import sys
 from pathlib import Path
+import datetime as dt
 
 import requests
 from google.cloud import storage
@@ -13,8 +14,8 @@ from pastiche.database import SessionLocal
 
 
 def generate_dall_e_prompt(
-    client: OpenAI, clue_sentence: str, solution: str, model: str = "gpt-4"
-):
+    client: OpenAI, clue_sentence: str, solution: str, model: str = "gpt-4o-mini"
+) -> str | None:
     prompt = f"""
     Generate a promt for text-to-image generation following the guidelines below:
     \n
@@ -91,7 +92,10 @@ def generate_jumble_images(
             image_prompt = generate_dall_e_prompt(
                 client, game.clue_sentence, game.solution_unjumbled
             )
-
+            if image_prompt is None:
+                # failed for this game, skip
+                print("Failed to generate prompt for game, skipping ...", game.id)
+                continue
             image_url = generate_image(client, image_prompt)
 
             download_image(image_url, image_path)
@@ -109,11 +113,11 @@ def generate_jumble_images(
             continue
 
 
-def generate_thumbnail(source_path: str, destination_path: str, height: int = 400):
+def generate_thumbnail(source_path: Path, destination_path: Path, height: float = 400):
     """Resise an image based on a specified height while conserving ratio"""
     try:
         with Image.open(source_path) as im:
-            im.thumbnail([sys.maxsize, height], Image.Resampling.LANCZOS)
+            im.thumbnail((float(sys.maxsize), height), Image.Resampling.LANCZOS)
             im.save(destination_path, "JPEG")
     except IOError:
         print(f"cannot create thumbnail for {source_path}")
@@ -142,6 +146,7 @@ if __name__ == "__main__":
     with SessionLocal() as db:
         solutions = (
             db.query(tables.JumbleGame)
+            .where(tables.JumbleGame.value_date >= (dt.date.today() - dt.timedelta(days=1)))
             .order_by(tables.JumbleGame.value_date)
             .limit(60)
             .all()
