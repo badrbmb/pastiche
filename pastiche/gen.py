@@ -1,11 +1,13 @@
-import shutil
+import base64
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from io import BytesIO
 from pathlib import Path
 import datetime as dt
 
-import requests
 from google.cloud import storage
-from openai import OpenAI
+from openai import OpenAI, APIError, RateLimitError
 from PIL import Image
 from tqdm import tqdm
 
@@ -13,63 +15,111 @@ from pastiche import config, tables
 from pastiche.database import SessionLocal
 
 
-def generate_dall_e_prompt(
+# Locked visual style so the whole gallery looks like one coherent product.
+# "no text, no letters" is critical for a jumble game — prevents the model
+# from sneaking typography into the image that could leak the solution.
+STYLE_ANCHOR = (
+    "Flat vector illustration, warm pastel palette, soft shadows, "
+    "clean composition, no text, no letters, no words."
+)
+
+PROMPT_SYSTEM = f"""You write text-to-image prompts for a daily jumble puzzle game.
+
+Rules:
+- Suggest the solution metaphorically or via related imagery. NEVER literally depict the solution word.
+- Anchor the scene in the clue-sentence's setting or theme.
+- Keep it to 2-3 concrete, visual sentences. No lists, no preamble.
+- Always end with this exact style anchor: "{STYLE_ANCHOR}"
+- Output only the prompt itself — nothing else."""
+
+
+def generate_image_prompt(
     client: OpenAI, clue_sentence: str, solution: str, model: str = "gpt-4o-mini"
 ) -> str | None:
-    prompt = f"""
-    Generate a promt for text-to-image generation following the guidelines below:
-    \n
-    1. Identify Key Elements: Focus on the main elements of both the clue-sentence and the solution. This could be objects, actions, or themes.
-    2. Visual Representation: Translate these elements into visual cues that can be illustrated. For example, if the solution is a play on words, I consider how to represent that pun visually.
-    3. Avoid Direct Depiction of Solution: Make sure the image suggests the solution without explicitly showing it. This often involves using metaphors or related imagery.
-    4. Context and Setting: Provide a setting or context that aligns with the clue-sentence, enhancing the overall theme.
-    5. Detail and Description: The prompt is detailed and descriptive to guide the AI in generating an image that closely matches the intended idea.
-    6. To the point: only return the prompt and nothing else
-    \n
-    Clue-sentence: '{clue_sentence}'\nSolution: '{solution}'
-    """.strip()
-
     chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        ],
         model=model,
+        messages=[
+            {"role": "system", "content": PROMPT_SYSTEM},
+            {"role": "user", "content": f"Clue: {clue_sentence}\nSolution: {solution}"},
+        ],
     )
-
     return chat_completion.choices[0].message.content
 
 
-def generate_image(client: OpenAI, prompt: str, model: str = "dall-e-3"):
+def generate_image(
+    client: OpenAI,
+    prompt: str,
+    model: str = "gpt-image-1",
+    quality: str = "low",
+    size: str = "1024x1024",
+) -> bytes:
+    """Generate an image and return raw PNG bytes.
+
+    Defaults to gpt-image-1 at low quality — ~3-4x cheaper than dall-e-3
+    standard, and more than sufficient once thumbnailed down to 400px.
+    """
     response = client.images.generate(
         model=model,
         prompt=prompt,
-        size="1024x1024",
-        quality="standard",
+        size=size,
+        quality=quality,
         n=1,
     )
+    return base64.b64decode(response.data[0].b64_json)
 
-    return response.data[0].url
+
+def _with_retry(fn, *args, attempts: int = 3, **kwargs):
+    """Simple exponential backoff for transient OpenAI errors.
+
+    Only retries on truly transient errors (rate limits, 5xx). Billing
+    errors like `insufficient_quota` fail fast since retrying won't help.
+    """
+    for i in range(attempts - 1):
+        try:
+            return fn(*args, **kwargs)
+        except (RateLimitError, APIError) as e:
+            code = getattr(e, "code", None)
+            if code == "insufficient_quota":
+                raise
+            time.sleep(2**i)
+            print(f"retrying after error: {e}")
+    # Final attempt — let any exception propagate.
+    return fn(*args, **kwargs)
 
 
-def download_image(url, filename):
-    # Open the url image, set stream to True, this will return the stream content.
-    r = requests.get(url, stream=True)
+def _process_one_game(
+    game: tables.JumbleGame,
+    client: OpenAI,
+    out_dir_raw: Path,
+    resized_output_dir: Path,
+    bucket_name: str,
+) -> None:
+    image_path = out_dir_raw / f"{game.id}.jpg"
+    if image_path.is_file():
+        return
 
-    # Check if the image was retrieved successfully
-    if r.status_code == 200:
-        # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
-        r.raw.decode_content = True
+    image_prompt = _with_retry(
+        generate_image_prompt, client, game.clue_sentence, game.solution_unjumbled
+    )
+    if image_prompt is None:
+        print("Failed to generate prompt for game, skipping ...", game.id)
+        return
 
-        # Open a local file with wb ( write binary ) permission and write the contents of the response to it.
-        with open(filename, "wb") as f:
-            shutil.copyfileobj(r.raw, f)
+    image_bytes = _with_retry(generate_image, client, image_prompt)
 
-        print("Image sucessfully Downloaded: ", filename)
-    else:
-        print("Image couldn't be retreived")
+    # gpt-image-1 returns PNG; re-encode as JPEG to keep existing .jpg paths
+    # and shrink file size before the thumbnail step.
+    with Image.open(BytesIO(image_bytes)) as im:
+        im.convert("RGB").save(image_path, "JPEG", quality=90)
+
+    thumbnail_path = resized_output_dir / f"{game.id}.jpg"
+    generate_thumbnail(image_path, thumbnail_path)
+
+    upload_blob(
+        bucket_name=bucket_name,
+        source_file_name=thumbnail_path,
+        destination_blob_name=f"thumbnails/{game.id}.jpg",
+    )
 
 
 def generate_jumble_images(
@@ -77,40 +127,29 @@ def generate_jumble_images(
     games: list[tables.JumbleGame],
     resized_output_dir: Path,
     bucket_name: str = config.BUCKET_IMG,
+    max_workers: int = 4,
 ):
-    """Function to generate images for a {limit} number of jumble games"""
+    """Generate images for the given jumble games, in parallel."""
     client = OpenAI()
 
-    for game in tqdm(games):
-        # check if an image already exists
-        image_path = out_dir_raw / f"{game.id}.jpg"
-
-        if image_path.is_file():
-            continue
-
-        try:
-            image_prompt = generate_dall_e_prompt(
-                client, game.clue_sentence, game.solution_unjumbled
-            )
-            if image_prompt is None:
-                # failed for this game, skip
-                print("Failed to generate prompt for game, skipping ...", game.id)
-                continue
-            image_url = generate_image(client, image_prompt)
-
-            download_image(image_url, image_path)
-
-            thumbnail_path = resized_output_dir / f"{game.id}.jpg"
-            generate_thumbnail(image_path, thumbnail_path)
-
-            upload_blob(
-                bucket_name=bucket_name,
-                source_file_name=thumbnail_path,
-                destination_blob_name=f"thumbnails/{game.id}.jpg",
-            )
-        except Exception as e:
-            print(e)
-            continue
+    with ThreadPoolExecutor(max_workers=max_workers) as ex:
+        futures = {
+            ex.submit(
+                _process_one_game,
+                game,
+                client,
+                out_dir_raw,
+                resized_output_dir,
+                bucket_name,
+            ): game
+            for game in games
+        }
+        for future in tqdm(as_completed(futures), total=len(futures)):
+            game = futures[future]
+            try:
+                future.result()
+            except Exception as e:
+                print(f"failed for game {game.id}: {e}")
 
 
 def generate_thumbnail(source_path: Path, destination_path: Path, height: float = 400):
