@@ -2,73 +2,203 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/styles.css" rel="stylesheet">
-    <title>Pastiche - Jumble</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Pastiche — Daily Jumble</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              paper:  '#faf6ef',
+              ink:    '#1a1a1a',
+              muted:  '#6b6357',
+              accent: '#d94f3a',
+              rule:   '#e6dfd1',
+            },
+            fontFamily: {
+              display: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
+              sans:    ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            },
+            boxShadow: {
+              paper: '0 1px 0 rgba(0,0,0,0.04), 0 12px 32px -16px rgba(60,40,20,0.18)',
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      /* Letter inputs share a single look. The .input-letter-cue class is
+         what the JS reads to know which letters carry over to the answer. */
+      .tile {
+        font-family: 'Fraunces', serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        text-align: center;
+        background: #ffffff;
+        color: #1a1a1a;
+        border: 1px solid #e6dfd1;
+        border-radius: 10px;
+        height: 48px;
+        width: 40px;
+        font-size: 1.25rem;
+        caret-color: #d94f3a;
+        transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+      }
+      .tile:focus {
+        outline: none;
+        border-color: #d94f3a;
+        box-shadow: 0 0 0 3px rgba(217,79,58,0.18);
+      }
+      .input-letter-cue {
+        border: 2px solid #d94f3a;
+        background: #fff5f1;
+      }
+      /* Filled-letter is purely a word-separator (always holds a space).
+         Render it as a small, visible gap rather than a competing tile. */
+      .filled-letter {
+        border: none;
+        background: transparent;
+        width: 0.75rem;
+        height: 56px;
+        pointer-events: none;
+        box-shadow: none;
+      }
+      .input-letter-solution {
+        border: 2px solid #1a1a1a;
+        height: 56px;
+        width: 44px;
+        font-size: 1.4rem;
+      }
+      .input-letter-solution:focus {
+        border-color: #d94f3a;
+      }
+    </style>
 </head>
-<script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="/static/scripts.js"></script>
-<body>
+<body class="min-h-screen bg-paper font-sans text-ink antialiased">
     <form action="/check" id="form" method="post" onsubmit="handleFormSubmit(this);">
-        <div class="container mt-5">
-            <div class="row">
-                <div class="col-lg-6">
-                    <div class="jumble-header text-center mb-3">
-                        <img src="static/pastiche-logo.png" alt="Pastiche Jumble" style="width: 100%; height: 150px">
-                        <div class="date">{{ value_date }}</div>
-                    </div>
-                    <div class="puzzle-container">
-                        <p>Unscramble these Jumbles, one letter to each square, to form ordinary words.</p>
-                        <div class="jumble-words">
-                            {% for jumble in jumbles %}
-                            <div class="{{ 'text-right' if loop.index is odd else 'text-left' }} jumble-group">
-                                <div>{{ jumble.jumbled }}</div>
-                                <div> 
-                                    {% for letter in jumble.jumbled %}
-                                    <input type="text" name="jumble_letters" class="{{ 'input-letter' if loop.index0 not in jumble.clue_indices else 'input-letter-cue' }}" maxlength="1" oninput="handleInput(this, '{{jumble.jumbled}}')" autocomplete="off" />
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
+        <div class="mx-auto w-full max-w-5xl px-4 pb-32 pt-6 sm:pt-10 lg:pb-12">
+
+            <header class="mb-6 flex items-center justify-between gap-4 border-b border-rule pb-4">
+                <a href="/" class="flex items-center gap-3 text-ink no-underline">
+                    <img src="/static/pastiche-logo.png" alt="Pastiche" class="h-16 w-auto sm:h-20">
+                </a>
+                <div class="date text-right text-[0.7rem] uppercase tracking-[0.18em] text-muted">
+                    {{ value_date }}
                 </div>
-                <div class="col-lg-6">                    
-                    <p>Now arrange the circled letters to form the surprise answer, as suggested by the cartoon.</p>
-                    <div class="cartoon-placeholder">
-                        <img src="{{ image_url }}" class="img-fluid">
-                    </div>
-                    <div class="cartoon-caption mt-4">
-                        '{{ clue_sentence }}'
-                    </div>
-                    <hr class="solid">
-                        <div class="answer-boxes text-center">                            
-                            <div class="jumble-group">
-                                Available letters:
-                                <div class="available-letters"></div>
+            </header>
+
+            <div class="grid gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
+
+                <!-- LEFT: jumbles -->
+                <section class="puzzle-container">
+                    <h1 class="font-display text-2xl font-semibold tracking-tight sm:text-3xl">Today's jumbles</h1>
+                    <p class="mt-1 max-w-md text-sm text-muted">
+                        Unscramble each word, one letter per square. The
+                        <span class="inline-block align-middle">
+                            <span class="inline-block h-3 w-3 rounded-full border-2 border-accent align-middle"></span>
+                        </span>
+                        circled letters carry over to the answer below.
+                    </p>
+
+                    <div class="mt-6 space-y-3">
+                        {% for jumble in jumbles %}
+                        <div class="jumble-group rounded-2xl border border-rule bg-white/70 p-4 shadow-paper">
+                            <div class="font-display text-xs font-semibold uppercase tracking-[0.28em] text-muted">
+                                {{ jumble.jumbled }}
                             </div>
-                            {% for letter in sanitized_solution %}
-                                {% if letter == "*" %}
-                                    <input type="text" name="solution_letters" class="input-letter-solution" maxlength="1" oninput="handleInput(this)"/>
-                                {% else %}
-                                    <input name="fill_letters" class="filled-letter" maxlength="1" value = "{{ letter }}" disabled/>
-                                {% endif %}
-                            {% endfor %}
+                            <div class="mt-2 flex flex-wrap gap-1.5">
+                                {% for letter in jumble.jumbled %}
+                                <input type="text"
+                                       name="jumble_letters"
+                                       class="tile {{ 'input-letter' if loop.index0 not in jumble.clue_indices else 'input-letter-cue' }}"
+                                       maxlength="1"
+                                       oninput="handleInput(this, '{{jumble.jumbled}}')"
+                                       autocomplete="off"
+                                       autocapitalize="characters"
+                                       inputmode="text" />
+                                {% endfor %}
+                            </div>
                         </div>
-                    <input type="hidden" name="value_date" value="{{ value_date }}">
-                    <div class="text-center mt-3">
-                        <button type="submit" class="btn btn-secondary">Check my answers</button>
+                        {% endfor %}
                     </div>
-                    <div class="text-center mt-3">
-                        <div type="results" id="results"></div>
-                    </div>
-                </div>
+                </section>
+
+                <!-- RIGHT: cartoon + answer -->
+                <section>
+                    <h2 class="font-display text-lg font-semibold tracking-tight sm:text-xl">The surprise answer</h2>
+                    <p class="mt-1 text-sm text-muted">
+                        Arrange the circled letters to match the cartoon's punchline.
+                    </p>
+
+                    <figure class="cartoon-placeholder mt-4 overflow-hidden rounded-2xl border border-rule bg-white shadow-paper">
+                        <div class="relative aspect-square w-full bg-paper/40">
+                            <img src="{{ image_url }}" alt="cartoon clue"
+                                 class="absolute inset-0 h-full w-full object-cover"
+                                 onerror="this.parentElement.innerHTML='&lt;div class=&quot;flex h-full w-full items-center justify-center px-6 text-center font-display text-sm italic text-muted&quot;&gt;cartoon unavailable today&lt;/div&gt;';">
+                        </div>
+                        <figcaption class="cartoon-caption border-t border-rule bg-paper/60 px-5 py-4 text-center font-display text-base italic leading-snug text-ink sm:text-lg">
+                            &lsquo;{{ clue_sentence }}&rsquo;
+                        </figcaption>
+                    </figure>
+
+                </section>
             </div>
+
+            <!-- Answer area: spans full page width on desktop so 10-letter answers fit one line -->
+            <section class="answer-boxes mx-auto mt-10 max-w-3xl lg:mt-14">
+                <div class="jumble-group flex items-center justify-center gap-2 text-[0.7rem] uppercase tracking-[0.18em] text-muted">
+                    <span>Available</span>
+                    <span class="available-letters font-display text-base font-semibold normal-case tracking-[0.18em] text-ink"></span>
+                </div>
+                <div class="mt-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-4 sm:gap-x-3">
+                    {% for word in sanitized_solution.split(' ') %}
+                    <div class="word-group flex items-center gap-1.5">
+                        {% for letter in word %}
+                            {% if letter == "*" %}
+                                <input type="text"
+                                       name="solution_letters"
+                                       class="tile input-letter-solution"
+                                       maxlength="1"
+                                       oninput="handleInput(this)"
+                                       autocomplete="off"
+                                       autocapitalize="characters"
+                                       inputmode="text" />
+                            {% else %}
+                                <span class="select-none font-display text-2xl text-muted">{{ letter }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if not loop.last %}
+                    <span aria-hidden="true"
+                          class="word-sep flex basis-full select-none items-center justify-center gap-2 py-1 text-muted sm:basis-auto sm:flex-col sm:gap-1 sm:px-3 sm:py-0">
+                        <span class="font-display text-3xl leading-none">·</span>
+                        <span class="text-[0.6rem] uppercase tracking-[0.18em] sm:mt-1 sm:text-[0.55rem]">space</span>
+                    </span>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+                <input type="hidden" name="value_date" value="{{ value_date }}">
+
+                <div id="results" class="mt-5 text-center font-display"></div>
+            </section>
+        </div>
+
+        <!-- Sticky check bar (mobile) → inline button (desktop) -->
+        <div class="fixed inset-x-0 bottom-0 z-20 border-t border-rule bg-paper/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur lg:static lg:mx-auto lg:max-w-5xl lg:border-0 lg:bg-transparent lg:px-4 lg:pb-12 lg:pt-0">
+            <button type="submit"
+                    class="block w-full rounded-full bg-accent px-6 py-3.5 font-display text-base font-semibold tracking-tight text-white shadow-paper transition hover:brightness-110 active:translate-y-px lg:mx-auto lg:w-auto lg:px-12">
+                Check my answers
+            </button>
         </div>
     </form>
 
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
+    <script src="/static/scripts.js"></script>
 </body>
 </html>

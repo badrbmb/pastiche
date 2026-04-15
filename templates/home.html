@@ -2,37 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/home_styles.css" rel="stylesheet">
-    <title>Jumble Statistics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Pastiche — Daily Jumble</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              paper:  '#faf6ef',
+              ink:    '#1a1a1a',
+              muted:  '#6b6357',
+              accent: '#d94f3a',
+              rule:   '#e6dfd1',
+            },
+            fontFamily: {
+              display: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
+              sans:    ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            },
+            boxShadow: {
+              paper: '0 1px 0 rgba(0,0,0,0.04), 0 12px 32px -16px rgba(60,40,20,0.18)',
+            },
+          },
+        },
+      }
+    </script>
 </head>
-<body>
-    <div class="statistics">
-        <img src="/static/pastiche-logo.png" alt="Pastiche Jumble" style="width: 100%; height: 150px">
-        <h2>Statistics</h2>
-        <div class="stats-headers-grid" >
-            <div class="stats-grid">
-                <div id="played">5</div>
-                <div id="fastest">10min 54s</div>    
-                <div id="current_streak">1</div>
-                <div id="max_streak">2</div>
+<body class="min-h-screen bg-paper font-sans text-ink antialiased">
+    <main class="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-8 sm:min-h-0 sm:pt-20">
+
+        <header class="text-center">
+            <img src="/static/pastiche-logo.png" alt="Pastiche — Word Jumble for Joanie" class="mx-auto h-56 w-auto sm:h-72">
+            <p class="mt-2 font-display text-base italic text-muted sm:mt-3 sm:text-lg">{{ greeting }}</p>
+        </header>
+
+        <section class="mt-12">
+            <div class="mb-3 flex items-baseline justify-between">
+                <h2 class="font-display text-xl font-semibold tracking-tight">Statistics</h2>
+                <span class="text-[0.7rem] uppercase tracking-[0.18em] text-muted">your story so far</span>
             </div>
-            <div class="headers-grid">
-                <div>Played</div>
-                <div>Fastest</div>    
-                <div>Current Streak</div>
-                <div>Max Streak</div>
+            <div class="stats-headers-grid rounded-2xl border border-rule bg-white/70 px-2 py-5 shadow-paper">
+                <div class="stats-grid grid grid-cols-4 gap-1 text-center font-display text-[1.75rem] font-semibold leading-none">
+                    <div id="played">0</div>
+                    <div id="fastest">–</div>
+                    <div id="current_streak">0</div>
+                    <div id="max_streak">0</div>
+                </div>
+                <div class="headers-grid mt-3 grid grid-cols-4 gap-1 text-center text-[0.65rem] uppercase tracking-[0.14em] text-muted">
+                    <div>Played</div>
+                    <div>Fastest</div>
+                    <div>Current</div>
+                    <div>Max</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="conditional-play mt-auto flex flex-col items-center gap-6 pt-12 sm:mt-12">
+            <button id="button-play" onclick="location.href='/play'"
+                    class="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-8 py-4 font-display text-lg font-semibold tracking-tight text-white shadow-paper transition hover:brightness-110 active:translate-y-px">
+                Play today's jumble
+                <span class="transition-transform group-hover:translate-x-0.5">→</span>
+            </button>
+            <div id="timer-div" class="timer text-center">
+                <div class="text-[0.7rem] uppercase tracking-[0.22em] text-muted">Next jumble in</div>
+                <div id="countdown" class="mt-1.5 font-display text-2xl font-semibold tracking-tight">23hrs 59min 59s</div>
             </div>
         </div>
-        <div class="conditional-play text-center">
-            <button id="button-play" class="btn btn-success btn-lg", onclick="location.href='/play'">Play now!</button>
-            <div id="timer-div" class="timer">
-                <b>Next Jumble in</b>
-                <div id="countdown" >23 hrs 59 min 59 s</div>
-            </div>
-        </div>
-    </div>
+
+    </main>
     <script src="/static/home_scripts.js"></script>
 </body>
 </html>

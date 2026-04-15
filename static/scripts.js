@@ -107,8 +107,8 @@ function handleFormSubmit(form) {
         // update div with id="results"
         let output = "";
         if (data.is_correct) {
-            output += '<p style="color:green; text-align: center;">Well done ※\(^o^)/※</p>'
-            output += '<p style="color:green; text-align: center;">Redirecting you to home ...</p>'
+            output += '<p style="color:#1a1a1a; text-align: center; font-size: 1.25rem; font-weight: 600;">Well done ※\(^o^)/※</p>'
+            output += '<p style="color:#6b6357; text-align: center; font-size: 0.875rem;">Redirecting you to home ...</p>'
             output += '<div class="success-container"><dotlottie-player src="https://lottie.host/7684ce67-b168-401d-9730-9ff6d578b2cc/Nd5PLkFxzr.json" background="#00000000" speed="1" style="width: 800px; height: 800px" direction="1" mode="normal" autoplay></dotlottie-player></div>'
             // store results in localStore for statistics
             let valueDate = form.elements.value_date.value;
@@ -125,10 +125,10 @@ function handleFormSubmit(form) {
             for (var key in data.is_jumbles_correct) {
                 var isCorrect = data.is_jumbles_correct[key]
                 if (isCorrect) {
-                    output += '<p style="color:green; text-align: center;">Jumble #'+ key +' is correct ※\(^o^)/※ </p>';
+                    output += '<p style="color:#1a1a1a; text-align: center; font-size: 0.95rem;">Jumble #'+ key +' is correct ※\(^o^)/※ </p>';
                 }
                 else {
-                    output += '<p style="color:red; text-align: center;">Jumble #'+ key +' is wrong •͡˘㇁•͡˘ \nKeep trying! </p>';
+                    output += '<p style="color:#d94f3a; text-align: center; font-size: 0.95rem;">Jumble #'+ key +' is wrong •͡˘㇁•͡˘ \nKeep trying! </p>';
                 }
                 
             }

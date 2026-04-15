@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from pastiche.database import SessionLocal, check_and_populate_db
 from pastiche import crud, config
+from pastiche.messages import random_greeting
 
 
 @asynccontextmanager
@@ -43,7 +44,10 @@ def get_db():
 
 @app.get("/", response_class=HTMLResponse)
 async def landing_page(request: Request):
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse(
+        "home.html",
+        {"request": request, "greeting": random_greeting()},
+    )
 
 
 @app.get("/play")
