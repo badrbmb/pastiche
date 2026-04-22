@@ -76,6 +76,20 @@
       .input-letter-solution:focus {
         border-color: #d94f3a;
       }
+      /* Narrow phones: shrink tiles so longer words (8–9 letters) fit on
+         one row, and any remaining overflow wraps cleanly via .word-group. */
+      @media (max-width: 639px) {
+        .tile {
+          height: 44px;
+          width: 32px;
+          font-size: 1.05rem;
+        }
+        .input-letter-solution {
+          height: 48px;
+          width: 34px;
+          font-size: 1.15rem;
+        }
+      }
     </style>
 </head>
 <body class="min-h-screen bg-paper font-sans text-ink antialiased">
@@ -156,7 +170,7 @@
                 </div>
                 <div class="mt-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-4 sm:gap-x-3">
                     {% for word in sanitized_solution.split(' ') %}
-                    <div class="word-group flex items-center gap-1.5">
+                    <div class="word-group flex flex-wrap items-center justify-center gap-1.5">
                         {% for letter in word %}
                             {% if letter == "*" %}
                                 <input type="text"
