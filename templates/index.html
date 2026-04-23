@@ -13,11 +13,12 @@
         theme: {
           extend: {
             colors: {
-              paper:  '#faf6ef',
-              ink:    '#1a1a1a',
-              muted:  '#6b6357',
-              accent: '#d94f3a',
-              rule:   '#e6dfd1',
+              paper:   '#faf6ef',
+              ink:     '#1a1a1a',
+              muted:   '#6b6357',
+              accent:  '#d94f3a',
+              rule:    '#e6dfd1',
+              success: '#6b8c5e',
             },
             fontFamily: {
               display: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
@@ -76,6 +77,46 @@
       .input-letter-solution:focus {
         border-color: #d94f3a;
       }
+      /* Per-jumble submission feedback: scoped with [data-jumble-index]
+         so the answer-area uses the same .jumble-group class without
+         inheriting these styles. */
+      .jumble-group[data-jumble-index] { position: relative; }
+      .jumble-group[data-jumble-index].is-correct {
+        border-color: #6b8c5e;
+        background: rgba(107,140,94,0.08);
+      }
+      .jumble-group[data-jumble-index].is-wrong {
+        border-color: #d94f3a;
+        background: rgba(217,79,58,0.06);
+      }
+      .jumble-badge {
+        position: absolute;
+        top: -10px;
+        right: 14px;
+        width: 24px;
+        height: 24px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #fff;
+        box-shadow: 0 4px 10px -4px rgba(0,0,0,0.25);
+      }
+      .jumble-badge.is-correct { background: #6b8c5e; }
+      .jumble-badge.is-wrong   { background: #d94f3a; }
+      /* Win cascade: each solution tile flips to success green. JS sets
+         animation-delay on each tile for the staggered wave. */
+      @keyframes tileWinFlip {
+        0%   { transform: rotateX(0deg);  background: #ffffff; border-color: #1a1a1a; color: #1a1a1a; }
+        49%  { transform: rotateX(90deg); background: #ffffff; border-color: #1a1a1a; color: #1a1a1a; }
+        51%  { transform: rotateX(90deg); background: #6b8c5e; border-color: #6b8c5e; color: #ffffff; }
+        100% { transform: rotateX(0deg);  background: #6b8c5e; border-color: #6b8c5e; color: #ffffff; }
+      }
+      .tile-win {
+        animation: tileWinFlip 520ms ease-in-out forwards;
+      }
       /* Narrow phones: shrink tiles so longer words (8–9 letters) fit on
          one row, and any remaining overflow wraps cleanly via .word-group. */
       @media (max-width: 639px) {
@@ -120,7 +161,7 @@
 
                     <div class="mt-6 space-y-3">
                         {% for jumble in jumbles %}
-                        <div class="jumble-group rounded-2xl border border-rule bg-white/70 p-4 shadow-paper">
+                        <div class="jumble-group rounded-2xl border border-rule bg-white/70 p-4 shadow-paper" data-jumble-index="{{ loop.index }}">
                             <div class="font-display text-xs font-semibold uppercase tracking-[0.28em] text-muted">
                                 {{ jumble.jumbled }}
                             </div>
@@ -212,7 +253,6 @@
     </form>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
     <script src="/static/scripts.js"></script>
 </body>
 </html>

@@ -94,6 +94,65 @@ function computeElapsedTime() {
     return elapsedTime;
 }
 
+function clearJumbleFeedback() {
+    document.querySelectorAll('.jumble-group[data-jumble-index]').forEach(card => {
+        card.classList.remove('is-correct', 'is-wrong');
+        const badge = card.querySelector('.jumble-badge');
+        if (badge) badge.remove();
+    });
+}
+
+function applyJumbleFeedback(isJumblesCorrect) {
+    Object.keys(isJumblesCorrect).forEach(idx => {
+        const card = document.querySelector('.jumble-group[data-jumble-index="' + idx + '"]');
+        if (!card) return;
+        const correct = isJumblesCorrect[idx];
+        const stateClass = correct ? 'is-correct' : 'is-wrong';
+        card.classList.add(stateClass);
+        const badge = document.createElement('span');
+        badge.className = 'jumble-badge ' + stateClass;
+        badge.setAttribute('aria-label', correct ? 'correct' : 'try again');
+        badge.textContent = correct ? '✓' : '✗';
+        card.appendChild(badge);
+    });
+}
+
+function summariseProgress(isJumblesCorrect) {
+    const values = Object.values(isJumblesCorrect);
+    const nCorrect = values.filter(Boolean).length;
+    const nTotal = values.length;
+    if (nCorrect === nTotal) return 'All jumbles match — now arrange the answer below';
+    if (nCorrect === 0)      return 'Keep going — none match yet';
+    return nCorrect + ' of ' + nTotal + ' correct — keep going';
+}
+
+function formatElapsed(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const mm = String(Math.floor(total / 60)).padStart(2, '0');
+    const ss = String(total % 60).padStart(2, '0');
+    return mm + ':' + ss;
+}
+
+function triggerSolvedAnimation(valueDate) {
+    const tiles = document.querySelectorAll('input.input-letter-solution');
+    const STAGGER_MS = 80;
+    const FLIP_MS = 520;
+    tiles.forEach((tile, i) => {
+        tile.style.animationDelay = (i * STAGGER_MS) + 'ms';
+        tile.classList.add('tile-win');
+    });
+    const elapsedTime = computeElapsedTime();
+    storeValueDate(valueDate, elapsedTime);
+
+    const cascadeDoneMs = (tiles.length ? (tiles.length - 1) * STAGGER_MS : 0) + FLIP_MS;
+    setTimeout(() => {
+        document.getElementById('results').innerHTML =
+            '<p class="font-display text-xl font-semibold tracking-tight text-ink">Solved.</p>' +
+            '<p class="mt-1 font-display text-sm tracking-[0.18em] text-muted">' + formatElapsed(elapsedTime) + '</p>';
+    }, cascadeDoneMs);
+    setTimeout(() => { window.location.href = "/"; }, cascadeDoneMs + 1500);
+}
+
 function handleFormSubmit(form) {
     // stop form from submitting normally
     event.preventDefault();
@@ -104,35 +163,15 @@ function handleFormSubmit(form) {
     })
     .then(response => response.json())
     .then(data => {
-        // update div with id="results"
-        let output = "";
+        // reset any prior per-jumble state and reapply based on this submission
+        clearJumbleFeedback();
+        applyJumbleFeedback(data.is_jumbles_correct);
+
         if (data.is_correct) {
-            output += '<p style="color:#1a1a1a; text-align: center; font-size: 1.25rem; font-weight: 600;">Well done ※\(^o^)/※</p>'
-            output += '<p style="color:#6b6357; text-align: center; font-size: 0.875rem;">Redirecting you to home ...</p>'
-            output += '<div class="success-container"><dotlottie-player src="https://lottie.host/7684ce67-b168-401d-9730-9ff6d578b2cc/Nd5PLkFxzr.json" background="#00000000" speed="1" style="width: 800px; height: 800px" direction="1" mode="normal" autoplay></dotlottie-player></div>'
-            // store results in localStore for statistics
-            let valueDate = form.elements.value_date.value;
-            // compute the elasped time
-            let elapsedTime = computeElapsedTime()
-            storeValueDate(valueDate, elapsedTime);
-            // redirect to home page after 3 seconds
-            setTimeout(function() {
-                window.location.href = "/";
-            }, 3500);
+            triggerSolvedAnimation(form.elements.value_date.value);
+            return;
         }
-        else {
-            // check each individial jumble
-            for (var key in data.is_jumbles_correct) {
-                var isCorrect = data.is_jumbles_correct[key]
-                if (isCorrect) {
-                    output += '<p style="color:#1a1a1a; text-align: center; font-size: 0.95rem;">Jumble #'+ key +' is correct ※\(^o^)/※ </p>';
-                }
-                else {
-                    output += '<p style="color:#d94f3a; text-align: center; font-size: 0.95rem;">Jumble #'+ key +' is wrong •͡˘㇁•͡˘ \nKeep trying! </p>';
-                }
-                
-            }
-        }
-        document.getElementById('results').innerHTML = output;
+        document.getElementById('results').innerHTML =
+            '<p class="font-display text-sm text-muted">' + summariseProgress(data.is_jumbles_correct) + '</p>';
     });
 }
