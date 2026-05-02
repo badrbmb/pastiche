@@ -139,7 +139,7 @@
 
             <header class="mb-6 flex items-center justify-between gap-4 border-b border-rule pb-4">
                 <a href="/" class="flex items-center gap-3 text-ink no-underline">
-                    <img src="/static/pastiche-logo.png" alt="Pastiche" class="h-16 w-auto sm:h-20">
+                    <img src="{{ static_url('pastiche-logo.png') }}" alt="Pastiche" class="h-16 w-auto sm:h-20">
                 </a>
                 <div class="date text-right text-[0.7rem] uppercase tracking-[0.18em] text-muted">
                     {{ value_date }}
@@ -253,6 +253,6 @@
     </form>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="/static/scripts.js"></script>
+    <script src="{{ static_url('scripts.js') }}"></script>
 </body>
 </html>

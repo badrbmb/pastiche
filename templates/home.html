@@ -35,7 +35,7 @@
     <main class="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-8 sm:min-h-0 sm:pt-20">
 
         <header class="text-center">
-            <img src="/static/pastiche-logo.png" alt="Pastiche — Word Jumble for Joanie" class="mx-auto h-56 w-auto sm:h-72">
+            <img src="{{ static_url('pastiche-logo.png') }}" alt="Pastiche — Word Jumble for Joanie" class="mx-auto h-56 w-auto sm:h-72">
             <p class="mt-2 font-display text-base italic text-muted sm:mt-3 sm:text-lg">{{ greeting }}</p>
         </header>
 
@@ -73,6 +73,6 @@
         </div>
 
     </main>
-    <script src="/static/home_scripts.js"></script>
+    <script src="{{ static_url('home_scripts.js') }}"></script>
 </body>
 </html>

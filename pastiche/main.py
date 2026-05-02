@@ -1,4 +1,6 @@
 from itertools import groupby
+import hashlib
+from pathlib import Path
 import pandas as pd
 from datetime import date, datetime
 from contextlib import asynccontextmanager
@@ -13,6 +15,16 @@ from sqlalchemy.orm import Session
 from pastiche.database import SessionLocal, check_and_populate_db
 from pastiche import crud, config
 from pastiche.messages import random_greeting
+
+
+def _build_static_hashes(static_dir: str) -> dict[str, str]:
+    hashes = {}
+    for path in Path(static_dir).rglob("*"):
+        if path.is_file():
+            digest = hashlib.md5(path.read_bytes()).hexdigest()[:10]
+            rel = path.relative_to(static_dir).as_posix()
+            hashes[rel] = digest
+    return hashes
 
 
 @asynccontextmanager
@@ -30,7 +42,17 @@ app = FastAPI(title="Pastiche", openapi_tags=tags, lifespan=load_db)
 
 app.mount("/static", StaticFiles(directory=config.STATIC_DIRECTORY), name="static")
 
+_static_hashes = _build_static_hashes(config.STATIC_DIRECTORY)
+
 templates = Jinja2Templates(directory=config.TEMPLATES_DIRECTORY)
+
+
+def _static_url(filename: str) -> str:
+    version = _static_hashes.get(filename, "")
+    return f"/static/{filename}?v={version}"
+
+
+templates.env.globals["static_url"] = _static_url
 
 
 def get_db():
