@@ -119,10 +119,96 @@ function UpdateUserStatistics(statistics) {
 
 
 
+var RESET_DATE = new Date(2023, 10, 8);
+var calMonth, calYear;
+
+function dateToKey(d) {
+    return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+}
+
+function buildPlayedSet() {
+    var played = new Set();
+    loadValueDates().forEach(function(entry) {
+        var parts = entry.valueDate.split(', ')[1];
+        if (parts) {
+            var d = new Date(parts);
+            if (!isNaN(d)) played.add(dateToKey(d));
+        }
+    });
+    return played;
+}
+
+function renderCalendar() {
+    var MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+    document.getElementById('cal-title').textContent = MONTHS[calMonth] + ' ' + calYear;
+
+    var played = buildPlayedSet();
+    var grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+
+    var firstDay = new Date(calYear, calMonth, 1);
+    var lastDay = new Date(calYear, calMonth + 1, 0);
+    var today = new Date();
+    var todayKey = dateToKey(today);
+
+    var startPad = (firstDay.getDay() + 6) % 7;
+    for (var i = 0; i < startPad; i++) {
+        grid.appendChild(document.createElement('div'));
+    }
+
+    for (var d = 1; d <= lastDay.getDate(); d++) {
+        var date = new Date(calYear, calMonth, d);
+        var key = dateToKey(date);
+        var isPlayed = played.has(key);
+        var isToday = key === todayKey;
+        var isFuture = date > today;
+        var isBeforeReset = date < RESET_DATE;
+
+        var cell = document.createElement('a');
+        cell.textContent = d;
+
+        if (isFuture || isBeforeReset) {
+            cell.className = 'cal-cell cal-dimmed';
+        } else if (isPlayed) {
+            cell.className = 'cal-cell cal-played';
+            cell.href = '/' + key;
+        } else if (isToday) {
+            cell.className = 'cal-cell cal-today';
+            cell.href = '/' + key;
+        } else {
+            cell.className = 'cal-cell cal-default';
+            cell.href = '/' + key;
+        }
+        grid.appendChild(cell);
+    }
+
+    var now = new Date();
+    document.getElementById('cal-prev').style.visibility =
+        (calYear > RESET_DATE.getFullYear() || (calYear === RESET_DATE.getFullYear() && calMonth > RESET_DATE.getMonth()))
+        ? 'visible' : 'hidden';
+    document.getElementById('cal-next').style.visibility =
+        (calYear < now.getFullYear() || (calYear === now.getFullYear() && calMonth < now.getMonth()))
+        ? 'visible' : 'hidden';
+}
+
+function calNav(dir) {
+    calMonth += dir;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    if (calMonth < 0)  { calMonth = 11; calYear--; }
+    renderCalendar();
+}
+
 window.onload = function () {
     let valueDatesArray = loadValueDates();
-    //  update user statistics
-    fetchStatistics(valueDatesArray)
+    fetchStatistics(valueDatesArray);
+
+    var now = new Date();
+    calMonth = now.getMonth();
+    calYear = now.getFullYear();
+    renderCalendar();
 
     // check localStore if today's game have been played
     let is_played = checkTodayInValueDates(valueDatesArray);

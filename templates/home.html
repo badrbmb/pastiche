@@ -30,6 +30,25 @@
         },
       }
     </script>
+    <style>
+      .cal-cell {
+        display: flex;
+        height: 2rem;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: background 120ms ease;
+      }
+      .cal-dimmed   { color: #e6dfd1; cursor: default; }
+      .cal-played   { background: #6b8c5e; color: #fff; }
+      .cal-today    { box-shadow: inset 0 0 0 2px #d94f3a; color: #1a1a1a; }
+      .cal-default  { color: #6b6357; }
+      .cal-default:hover { background: rgba(230,223,209,0.5); }
+    </style>
 </head>
 <body class="min-h-screen bg-paper font-sans text-ink antialiased">
     <main class="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-8 sm:min-h-0 sm:pt-20">
@@ -57,6 +76,26 @@
                     <div>Current</div>
                     <div>Max</div>
                 </div>
+            </div>
+        </section>
+
+        <section class="mt-8">
+            <div class="mb-3 flex items-center justify-between">
+                <button id="cal-prev" onclick="calNav(-1)"
+                        class="flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-rule/50 hover:text-ink">
+                    <span class="font-display text-lg">‹</span>
+                </button>
+                <h2 id="cal-title" class="font-display text-base font-semibold tracking-tight"></h2>
+                <button id="cal-next" onclick="calNav(1)"
+                        class="flex h-8 w-8 items-center justify-center rounded-full text-muted transition hover:bg-rule/50 hover:text-ink">
+                    <span class="font-display text-lg">›</span>
+                </button>
+            </div>
+            <div class="rounded-2xl border border-rule bg-white/70 px-3 py-4 shadow-paper">
+                <div class="grid grid-cols-7 gap-1 text-center text-[0.6rem] uppercase tracking-[0.14em] text-muted">
+                    <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+                </div>
+                <div id="cal-grid" class="mt-2 grid grid-cols-7 gap-1"></div>
             </div>
         </section>
 
