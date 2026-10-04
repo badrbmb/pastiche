@@ -28,7 +28,7 @@ class JumbleAnswersSpider(scrapy.Spider):
 
         self.date_format = date_format
         if isinstance(end_date, str):
-            end_date = date.strptime(end_date, self.date_format)
+            end_date = datetime.strptime(end_date, self.date_format).date()
 
         self.end_date = end_date
         self.date_offset = int(date_offset)
@@ -62,16 +62,30 @@ class JumbleAnswersSpider(scrapy.Spider):
         pass
 
     def start_requests(self):
-        for value_date in self.value_dates:
-            year = value_date.year
-            month = value_date.month
-            day = value_date.day
-            date_str = f"{month}-{day}-{value_date.strftime('%y')}"
-            url = f"{self.raw_url}/{year}/{str(month).zfill(2)}/{str(day).zfill(2)}/{self.answers_endpoint_prefix}-{date_str}"
-            yield scrapy.Request(url, callback=self.parse_jumbles)
+        if not self.value_dates:
+            return
+        # slugs are irregular (typos, missing dashes), so list real post links from the WP API
+        wanted = {d.strftime(self.date_format) for d in self.value_dates}
+        # `after` is exclusive and posts are stamped 00:00:00, so widen by a day; `wanted` filters exactly
+        after = min(self.value_dates) - timedelta(days=1)
+        before = max(self.value_dates) + timedelta(days=1)
+        url = (
+            f"{self.raw_url}/wp-json/wp/v2/posts?per_page=100&_fields=date,link"
+            f"&after={after}T00:00:00&before={before}T00:00:00"
+        )
+        yield scrapy.Request(url, callback=self.parse_post_list, cb_kwargs={"wanted": wanted, "page": 1})
+
+    def parse_post_list(self, response, wanted: set[str], page: int):
+        for post in response.json():
+            if post["date"][:10] in wanted:
+                yield scrapy.Request(post["link"], callback=self.parse_jumbles)
+        if page < int(response.headers.get("X-WP-TotalPages", 1)):
+            next_url = response.url.split("&page=")[0] + f"&page={page + 1}"
+            yield scrapy.Request(next_url, callback=self.parse_post_list, cb_kwargs={"wanted": wanted, "page": page + 1})
 
     def parse_jumbles(self, response):
-        content = ["".join(t.css("::text").extract()) for t in response.css("p")]
+        content = ["".join(t.css("::text").extract()).strip() for t in response.css("p")]
+        content = [c for c in content if c]  # some pages pad entries with empty <p>
 
         index_ref = content.index("CARTOON ANSWER:")
         jumbles_text = content[:index_ref]
