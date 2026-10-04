@@ -72,6 +72,29 @@ function handleInput(element, allowedChars = null) {
     } else if (group) {
         clearSingleJumbleFeedback(group.dataset.jumbleIndex);
     }
+
+    if (group) fadeUsedJumbleLetters(group);
+    updateAnswerPool();
+}
+
+// One header letter fades per typed letter, so a doubled L fades one L at a time.
+function fadeUsedJumbleLetters(group) {
+    var used = Array.from(group.querySelectorAll('input.tile'), function(t) { return t.value.toUpperCase(); });
+    group.querySelectorAll('.jumble-letters span').forEach(function(span) {
+        var i = used.indexOf(span.textContent);
+        span.classList.toggle('letter-used', i >= 0);
+        if (i >= 0) used.splice(i, 1);
+    });
+}
+
+function updateAnswerPool() {
+    var available = getRemainingLetters(null);
+    var used = Array.from(document.querySelectorAll('.input-letter-solution'), function(t) { return t.value.toUpperCase(); }).join('');
+    var availableEl = document.querySelector('.available-letters');
+    availableEl.textContent = available || '·';
+    availableEl.classList.toggle('letter-used', !available);
+    document.querySelector('.used-letters').textContent = used;
+    document.querySelector('.used-row').classList.toggle('hidden', !used);
 }
 
 function handleBackspace(e) {
@@ -110,52 +133,6 @@ window.onload = function() {
     localStorage.setItem('startTime', currentTime);
 }
   
-
-// function to update the available letters to be used for the solution
-$(document).ready(function () {
-    // get all input letters counting towards the solution
-    function getAvailableLetters() {
-        var availableLetters = "";
-        $.each($(".input-letter-cue"), function() {
-            var value = $(this).val();
-            if (value) {
-                availableLetters += value.toUpperCase();
-            }
-        });
-        return availableLetters;
-    }
-
-    function getUsedLetters() {
-        var usedLetters = '';
-        $(".input-letter-solution").each(function() {
-            usedLetters += $(this).val();
-        });
-        return usedLetters;
-    }
-
-    function getDisplayLetters() {
-        var availableLetters = getAvailableLetters();
-        var usedLetters = getUsedLetters();
-        var displayLetters = availableLetters
-        // Remove solution letters from availableLetters
-        for (var i = 0; i < usedLetters.length; i++) {
-            displayLetters = displayLetters.replace(usedLetters.charAt(i).toUpperCase(), '');
-        }
-        return displayLetters;
-    }
-
-    // set the available letters based on the inputs
-    $(".input-letter-cue").on('input', function () {
-        var letters = getDisplayLetters();
-        $(".available-letters").text(letters);
-    });
-
-    // set the available letters based on the used inputs in the solution
-    $("[name=solution_letters]").on('input', function () {
-        var letters = getDisplayLetters();
-        $(".available-letters").text(letters);
-    });
-});
 
 function storeValueDate(valueDate, elapsedTime) {
     // Initialize valueDatesArray as Array
@@ -213,7 +190,19 @@ function autoValidateJumble(jumbleIndex) {
         var result = {};
         result[jumbleIndex] = data.is_jumbles_correct[jumbleIndex];
         applyJumbleFeedback(result);
+        if (result[jumbleIndex]) focusNextEmptyTile(jumbleIndex);
     });
+}
+
+// Skips to the next card with an empty tile, then the answer; only if the player hasn't already moved on.
+function focusNextEmptyTile(jumbleIndex) {
+    var card = document.querySelector('.jumble-group[data-jumble-index="' + jumbleIndex + '"]');
+    if (!card.contains(document.activeElement)) return;
+    var tiles = Array.from(document.querySelectorAll('input[name="jumble_letters"], input.input-letter-solution'));
+    var next = tiles.find(function(t) { return t.value === '' && !card.contains(t) && (t.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_PRECEDING); });
+    if (!next) return;
+    next.focus({ preventScroll: true });
+    next.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function applyJumbleFeedback(isJumblesCorrect) {
