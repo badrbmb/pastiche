@@ -1,7 +1,7 @@
 from pathlib import Path
 import logging
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError, NoResultFound, ProgrammingError
 
@@ -46,6 +46,28 @@ def populate_database(path: str | Path, reset_dates: bool = True) -> None:
         db.commit()
 
 
+def append_new_games(path: str | Path) -> int:
+    """Adds games not yet in the db (by url_from), scheduled the day after the latest existing game"""
+    historical_games = JumbleGameCollection.from_jumble_answers(path)
+
+    with SessionLocal() as db:
+        known_urls = {url for (url,) in db.query(tables.JumbleGame.url_from)}
+        last_date = db.query(func.max(tables.JumbleGame.value_date)).scalar()
+        new_games = sorted(
+            (g for g in historical_games.games if g.url_from not in known_urls),
+            key=lambda g: str(g.value_date),
+        )
+        for i, game in enumerate(new_games, start=1):
+            game_dict = game.model_dump()
+            jumbles = [tables.Jumble(**t) for t in game_dict.pop("jumbles")]
+            game_dict["value_date"] = last_date + timedelta(days=i)
+            db.add(tables.JumbleGame(**game_dict, jumbles=jumbles))
+        db.commit()
+
+    logger.info(f"Appended {len(new_games)} new games after {last_date}")
+    return len(new_games)
+
+
 def check_and_populate_db(path: str | Path) -> None:
     """Check if the database exists and is populated, if not, create tables and populate database"""
     try:
@@ -61,6 +83,8 @@ def check_and_populate_db(path: str | Path) -> None:
         )
         create_tables(drop_if_exists=True)
         populate_database(path)
+    else:
+        append_new_games(path)
 
     logger.info("Database is ready (＾◡＾)っ✂╰⋃╯")
 
