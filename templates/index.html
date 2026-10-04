@@ -78,6 +78,7 @@
       .input-letter-solution:focus {
         border-color: #d94f3a;
       }
+      .letter-used { opacity: 0.3; }
       /* Per-jumble submission feedback: scoped with [data-jumble-index]
          so the answer-area uses the same .jumble-group class without
          inheriting these styles. */
@@ -163,8 +164,8 @@
                     <div class="mt-6 space-y-3">
                         {% for jumble in jumbles %}
                         <div class="jumble-group rounded-2xl border border-rule bg-white/70 p-4 shadow-paper" data-jumble-index="{{ loop.index }}">
-                            <div class="font-display text-xs font-semibold uppercase tracking-[0.28em] text-muted">
-                                {{ jumble.jumbled }}
+                            <div class="jumble-letters font-display text-xs font-semibold uppercase tracking-[0.28em] text-muted">
+                                {%- for letter in jumble.jumbled %}<span>{{ letter }}</span>{% endfor -%}
                             </div>
                             <div class="mt-2 flex flex-wrap gap-1.5">
                                 {% for letter in jumble.jumbled %}
@@ -206,9 +207,15 @@
 
             <!-- Answer area: spans full page width on desktop so 10-letter answers fit one line -->
             <section class="answer-boxes mx-auto mt-10 max-w-3xl lg:mt-14">
-                <div class="jumble-group flex items-center justify-center gap-2 text-[0.7rem] uppercase tracking-[0.18em] text-muted">
-                    <span>Available</span>
-                    <span class="available-letters font-display text-base font-semibold normal-case tracking-[0.18em] text-ink"></span>
+                <div class="jumble-group mx-auto w-fit space-y-1 text-[0.7rem] uppercase tracking-[0.18em] text-muted">
+                    <div class="flex items-center gap-3">
+                        <span class="w-20 text-right">Available</span>
+                        <span class="available-letters font-display text-base font-semibold normal-case tracking-[0.18em] text-ink"></span>
+                    </div>
+                    <div class="used-row hidden flex items-center gap-3">
+                        <span class="w-20 text-right">Used</span>
+                        <span class="used-letters letter-used font-display text-base font-semibold normal-case tracking-[0.18em] text-ink"></span>
+                    </div>
                 </div>
                 <div class="mt-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-4 sm:gap-x-3">
                     {% for word in sanitized_solution.split(' ') %}
@@ -250,7 +257,6 @@
         </div>
     </form>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="{{ static_url('scripts.js') }}"></script>
 </body>
 </html>
